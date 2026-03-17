@@ -1,5 +1,5 @@
 # 42 FT_IRC
-This project has been created as part of the 42 curriculum by *bbento-a* and *joafaust*
+*This project has been created as part of the 42 curriculum by bbento-a and joafaust*
 
 ## Description
 
