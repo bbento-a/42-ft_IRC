@@ -63,6 +63,10 @@ void	Server::setup(char *port, char *password)
         throw ; // FailedtoListen listening socket
 
 	this->svEndpoint = listenSocket;
+	struct pollfd addToPoll;
+	addToPoll.fd = listenSocket;	
+	addToPoll.events = POLLIN;	
+	this->clientsPoll.push_back(addToPoll);
 }
 
 void	Server::runtime()
@@ -70,6 +74,30 @@ void	Server::runtime()
     // Loop
 	while (1)
 	{
+		// using poll to identify if there is new data from the client connections
+		// and if there is poll will edit the given struct pollfd * variable, so when
+		// we iter it, we can act according to the new data that was found
+		if (poll(&clientsPoll[0], clientsPoll.size(), -1) <= -1)
+			throw ; // PollFailedtoRetrieveInfo
 
+		for (size_t i = 0; i < clientsPoll.size(); i++)
+		{
+			short	cEvent = clientsPoll[i].revents;
+			int		cFd = clientsPoll[i].fd;
+	
+			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP)
+			{
+				// disconnect error, invalid or hung up connections
+				break ;
+			}
+			else if (cFd == this->svEndpoint && cEvent & POLLIN)
+			{
+				// accept new connections and add to the poll
+			}
+			else if (cEvent & POLLIN)
+			{
+				// new read input data
+			}
+		}
 	}
 }
