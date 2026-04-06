@@ -64,8 +64,9 @@ void	Server::setup(char *port, char *password)
 
 	this->_svEndpoint = listenSocket;
 	struct pollfd addToPoll;
-	addToPoll.fd = listenSocket;	
-	addToPoll.events = POLLIN;	
+	addToPoll.fd = listenSocket;
+	addToPoll.events = POLLIN;
+	addToPoll.revents = 0;
 	this->_clientsPoll.push_back(addToPoll);
 }
 
@@ -80,14 +81,16 @@ void	Server::runtime()
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 			throw ; // PollFailedtoRetrieveInfo
 
-		for (size_t i = 0; i < _clientsPoll.size(); i++)
+		//for (size_t i = 0; i < _clientsPoll.size(); i++)
+		for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
 		{
 			// for legibility
-			short	cEvent = _clientsPoll[i].revents;
-			int		cFd = _clientsPoll[i].fd;
+			short	cEvent = it->revents;
+			int		cFd = it->fd;
 	
 			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP)
 			{
+				unregisterClient(it);
 				// disconnect error, invalid or hung up connections
 				break ; // or make condition having in consideration the size of current poll with - 1 client
 			}
@@ -99,6 +102,7 @@ void	Server::runtime()
 			else if (cEvent & POLLIN)
 			{
 				// new read input data
+				handleClientData(it);
 			}
 		}
 	}

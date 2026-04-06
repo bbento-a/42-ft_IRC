@@ -5,6 +5,8 @@
 #include <poll.h>
 #include <vector>
 
+typedef typename std::vector<struct pollfd>::iterator pollfdIter;
+
 // Notes from metro thinking time aahh (it means this needs reviewing)
 class Client
 {
@@ -20,7 +22,7 @@ class Server
 	int		_svEndpoint;
 
 	std::vector <struct pollfd>	_clientsPoll;
-	Client						_clients; //connected clients to the sv
+	std::vector <Client>		_clients; //connected clients to the sv
 	Channel						_channels[]; //existing channels at sv
 	
 	public:
@@ -29,8 +31,8 @@ class Server
 	void	setup(char *port, char *password); // check everything for start up
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
-	void    unregisterClient(struct pollfd *newClient);
-	void    handleClientData(struct pollfd *clientInfo);
+	void    unregisterClient(pollfdIter clientInfo);
+	void    handleClientData(pollfdIter clientInfo);
 };
 
 class Channel
