@@ -62,11 +62,11 @@ void	Server::setup(char *port, char *password)
     if (listen(listenSocket, SOMAXCONN) <= -1)
         throw ; // FailedtoListen listening socket
 
-	this->svEndpoint = listenSocket;
+	this->_svEndpoint = listenSocket;
 	struct pollfd addToPoll;
 	addToPoll.fd = listenSocket;	
 	addToPoll.events = POLLIN;	
-	this->clientsPoll.push_back(addToPoll);
+	this->_clientsPoll.push_back(addToPoll);
 }
 
 void	Server::runtime()
@@ -77,21 +77,23 @@ void	Server::runtime()
 		// using poll to identify if there is new data from the client connections
 		// and if there is poll will edit the given struct pollfd * variable, so when
 		// we iter it, we can act according to the new data that was found
-		if (poll(&clientsPoll[0], clientsPoll.size(), -1) <= -1)
+		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 			throw ; // PollFailedtoRetrieveInfo
 
-		for (size_t i = 0; i < clientsPoll.size(); i++)
+		for (size_t i = 0; i < _clientsPoll.size(); i++)
 		{
-			short	cEvent = clientsPoll[i].revents;
-			int		cFd = clientsPoll[i].fd;
+			// for legibility
+			short	cEvent = _clientsPoll[i].revents;
+			int		cFd = _clientsPoll[i].fd;
 	
 			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP)
 			{
 				// disconnect error, invalid or hung up connections
-				break ;
+				break ; // or make condition having in consideration the size of current poll with - 1 client
 			}
-			else if (cFd == this->svEndpoint && cEvent & POLLIN)
+			else if (cFd == this->_svEndpoint && cEvent & POLLIN)
 			{
+				registerClient();
 				// accept new connections and add to the poll
 			}
 			else if (cEvent & POLLIN)

@@ -6,25 +6,31 @@
 #include <vector>
 
 // Notes from metro thinking time aahh (it means this needs reviewing)
-class Client{};
+class Client
+{
+	public:
+	int socketFd;
+};
 
 class Server
 {
 	private:
-	int		serverPort;
-	int		password;
-	int		svEndpoint;
+	int		_serverPort;
+	int		_password;
+	int		_svEndpoint;
 
-	std::vector <struct pollfd>	clientsPoll;
-	Client						Clients; //connected clients to the sv
-	Channel						Channels[]; //existing channels at sv
+	std::vector <struct pollfd>	_clientsPoll;
+	Client						_clients; //connected clients to the sv
+	Channel						_channels[]; //existing channels at sv
 	
 	public:
 	//OCF
 	void    parseArguments(char *port, char *password);
 	void	setup(char *port, char *password); // check everything for start up
-	void	runtime(); //loop of connections
-	void	registerClient(); //check client infos to link them to the sv
+	void	runtime(void); //loop of connections
+	void	registerClient(void); //check client infos to link them to the sv
+	void    unregisterClient(struct pollfd *newClient);
+	void    handleClientData(struct pollfd *clientInfo);
 };
 
 class Channel
