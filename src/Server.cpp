@@ -1,23 +1,28 @@
 #include "../inc/Server.hpp"
+#include <cstdlib>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 // #include <arpa/inet.h>
 #include <fcntl.h>
-
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+/* 
 void    Server::parseArguments(char *port, char *password)
 {
     // check if port is within the correct ports to use
         // if not, throw
     // store infos in sv
 }
-
+ */
 
 // In setup() we're creating a listening socket for the server - the endpoint
 // for clients to connect, with the defined settings asked for the project.
     
 void	Server::setup(char *port, char *password)
 {
+	(void)password;
     // parse arguments
 		// port nb
 		// password
@@ -27,7 +32,7 @@ void	Server::setup(char *port, char *password)
     // Creating a listening (passive) socket to receive new connections
     int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSocket <= -1)
-        throw ; // FailedtoCreate listening socket
+        throw 'a'; // FailedtoCreate listening socket
 
 
 	// ↓ Settings that are required to set before turn the socket passive ↓
@@ -37,30 +42,33 @@ void	Server::setup(char *port, char *password)
     // sockaddr_in is used for IPv4 
     sockaddr_in sockSettings;
     sockSettings.sin_family = AF_INET;
-    sockSettings.sin_port = htons(5050); // add port that was given in args
+    sockSettings.sin_port = htons(std::atoi(port)); // add port that was given in args
     sockSettings.sin_addr.s_addr = INADDR_ANY;
     // htons() is used to change the bits order to big endian, which is the order used in networking
     // htons -> "host to network short"
-
+	int optVal = 1; // to turn optname on
 	// Setting the socket to be able to reuse the address/port,
 	// without waiting for TIME_WAIT (default time in TCP for when a server stops running)
-	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, NULL, sizeof(sockSettings)) <= -1)
-        throw ; // FailedtoSetSockSettings
+	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) <= -1)
+    {
+		std::cerr << std::strerror(errno) << '\n';
+	    throw 'b'; // FailedtoSetSockSettings
+	}
 	
 	// Setting the socket to be non-blocking - as asked in the subject
 	if (fcntl(listenSocket, F_SETFL, O_NONBLOCK) <= -1)
-        throw ; // FailedtoTurnSocketNonBlocking
+        throw 'c'; // FailedtoTurnSocketNonBlocking
 
 
 	// ↓ Here is the part we link and connect the socket to become a listening asset ↓
 
     // Doing the binding (assigning address to socket)
     if (bind(listenSocket, reinterpret_cast<sockaddr *>(&sockSettings), sizeof(sockSettings)) <= -1)
-        throw ; // FailedtoBind listening socket
+        throw 'd'; // FailedtoBind listening socket
 
     // Listen will "turn the socket passive"
     if (listen(listenSocket, SOMAXCONN) <= -1)
-        throw ; // FailedtoListen listening socket
+		throw 'e'; // FailedtoListen listening socket
 
 	this->_svEndpoint = listenSocket;
 	struct pollfd addToPoll;
@@ -81,29 +89,33 @@ void	Server::runtime()
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 			throw ; // PollFailedtoRetrieveInfo
 
-		//for (size_t i = 0; i < _clientsPoll.size(); i++)
-		for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
+		for (size_t i = 0; i < _clientsPoll.size(); i++)
+		//for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
 		{
 			// for legibility
-			short	cEvent = it->revents;
-			int		cFd = it->fd;
+			short	cEvent = _clientsPoll[i].revents;
+			int		cFd = _clientsPoll[i].fd;
 	
 			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP)
 			{
-				unregisterClient(it);
+				//unregisterClient(it);
 				// disconnect error, invalid or hung up connections
-				break ; // or make condition having in consideration the size of current poll with - 1 client
 			}
 			else if (cFd == this->_svEndpoint && cEvent & POLLIN)
 			{
+				std::cout << "aaa"<< '\n';
 				registerClient();
+				//break ;
 				// accept new connections and add to the poll
 			}
 			else if (cEvent & POLLIN)
 			{
 				// new read input data
-				handleClientData(it);
+				//handleClientData(it);
+				handleClientData(&_clientsPoll[i]);
 			}
+			//might have to write for POLLOUT
+				//std::cout << "bbb"<< '\n';
 		}
 	}
 }

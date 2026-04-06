@@ -23,7 +23,7 @@ class Server
 
 	std::vector <struct pollfd>	_clientsPoll;
 	std::vector <Client>		_clients; //connected clients to the sv
-	Channel						_channels[]; //existing channels at sv
+	//Channel						_channels[]; //existing channels at sv
 	
 	public:
 	//OCF
@@ -32,7 +32,8 @@ class Server
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
 	void    unregisterClient(pollfdIter clientInfo);
-	void    handleClientData(pollfdIter clientInfo);
+	//void    handleClientData(pollfdIter clientInfo);
+	void    handleClientData(struct pollfd *clientInfo);
 };
 
 class Channel

@@ -19,8 +19,9 @@ int main (int argc, char **argv)
         server.setup(argv[1], argv[2]);
         server.runtime();
     }
-    catch(const std::exception& e)
+    //catch(const std::exception& e)
+    catch(const char &e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << e << '\n';
     }
 }

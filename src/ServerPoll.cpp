@@ -2,7 +2,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
-
+#include <cerrno>
+#include <cstring>
+#include <iostream>
 // Logic for having new wawawas:
 // Create Client instance
 // Create Client struct pollfd
@@ -19,15 +21,18 @@ void    Server::registerClient(void)
 
     newClient.socketFd = accept(this->_svEndpoint, reinterpret_cast<sockaddr *>(&sockSettings), &settingsLen);
     if (newClient.socketFd == -1)
-        throw ; //FailedtoCreateClientSocket
+    {   
+		std::cerr << std::strerror(errno) << '\n';
+            throw 'g'; //FailedtoCreateClientSocket
+    }
     if (fcntl(newClient.socketFd, F_SETFL, O_NONBLOCK) <= -1)
-        throw ; // FailedtoTurnSocketNonBlocking
+        throw 'h'; // FailedtoTurnSocketNonBlocking
     newClientPoll.fd = newClient.socketFd;
     newClientPoll.events = POLLIN;
 	newClientPoll.revents = 0;
 
-    this->_clientsPoll.push_back(newClientPoll);
     this->_clients.push_back(newClient);
+    this->_clientsPoll.push_back(newClientPoll);
 }
 
 // Logic for departing wawawas:
@@ -48,7 +53,46 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 // Logic for receiving data from wawawas:
 // Make buffer to read and store info
 // Send received data for corresponded place
+void    Server::handleClientData(struct pollfd *clientInfo)
+{
+    char buf[100];
+    int  retCode = -1;
+    retCode = recv(clientInfo->fd, &buf, 100, 0);
+    if (retCode <= -1)
+        throw ;//FailedtoReceiveMsg
+    else
+    {
+        for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
+        {
+            retCode = send(it->fd, buf, 100, 0);
+            if (retCode <= -1)
+                throw 'i';//FailedtoSendMsg
+        }
+    }
+    //  Get info from a client, and store it
+    //  Send that info to everyone in sv
+    //  (Testing server setup)
+}
+
+/* s clientIn
 void    Server::handleClientData(pollfdIter clientInfo)
 {
-
+    char buf[100];
+    int  retCode = -1;
+    retCode = recv(clientInfo->fd, &buf, 100, 0);
+    if (retCode <= -1)
+        throw ;//FailedtoReceiveMsg
+    else
+    {
+        for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
+        {
+            retCode = send(it->fd, buf, 100, 0);
+            if (retCode <= -1)
+                throw 'i';//FailedtoSendMsg
+        }
+    }
+    //  Get info from a client, and store it
+    //  Send that info to everyone in sv
+    //  (Testing server setup)
 }
+*/
