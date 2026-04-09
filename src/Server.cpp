@@ -90,32 +90,24 @@ void	Server::runtime()
 			throw ; // PollFailedtoRetrieveInfo
 
 		for (size_t i = 0; i < _clientsPoll.size(); i++)
-		//for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
 		{
 			// for legibility
 			short	cEvent = _clientsPoll[i].revents;
 			int		cFd = _clientsPoll[i].fd;
 	
-			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP)
+			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP) // disconnect error, invalid or hung up connections
 			{
-				//unregisterClient(it);
-				// disconnect error, invalid or hung up connections
+				//unregisterClient(it);	
 			}
-			else if (cFd == this->_svEndpoint && cEvent & POLLIN)
+			else if (cFd == this->_svEndpoint && (cEvent & POLLIN)) // accept new connections and add to the poll
 			{
-				std::cout << "aaa"<< '\n';
+				std::cout << "Connected user"<< '\n';
 				registerClient();
-				//break ;
-				// accept new connections and add to the poll
 			}
-			else if (cEvent & POLLIN)
+			else if (cEvent & POLLIN) // new read input data
 			{
-				// new read input data
-				//handleClientData(it);
 				handleClientData(&_clientsPoll[i]);
 			}
-			//might have to write for POLLOUT
-				//std::cout << "bbb"<< '\n';
 		}
 	}
 }

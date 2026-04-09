@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+
 // Logic for having new wawawas:
 // Create Client instance
 // Create Client struct pollfd
@@ -58,13 +59,19 @@ void    Server::handleClientData(struct pollfd *clientInfo)
     char buf[100];
     int  retCode = -1;
     retCode = recv(clientInfo->fd, &buf, 100, 0);
+    if (retCode == 0)
+    {
+        //unregister client
+    }
     if (retCode <= -1)
         throw ;//FailedtoReceiveMsg
     else
     {
         for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
         {
-            retCode = send(it->fd, buf, 100, 0);
+            if (it->fd == this->_svEndpoint) // if I send it to the listening socket it will SIGPIPE
+                continue ;
+            retCode = send((*it).fd, buf, retCode, 0);
             if (retCode <= -1)
                 throw 'i';//FailedtoSendMsg
         }
