@@ -34,6 +34,7 @@ void    Server::registerClient(void)
 
     this->_clients.push_back(newClient);
     this->_clientsPoll.push_back(newClientPoll);
+	this->_nbConnected++;
 }
 
 // Logic for departing wawawas:
@@ -49,6 +50,7 @@ void    Server::unregisterClient(pollfdIter clientInfo)
         return ;
     this->_clients.erase(it);
     this->_clientsPoll.erase(clientInfo);
+	this->_nbConnected--;
 }
 
 // Logic for receiving data from wawawas:

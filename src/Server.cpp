@@ -8,31 +8,39 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
-/* 
+
 void    Server::parseArguments(char *port, char *password)
 {
-    // check if port is within the correct ports to use
-        // if not, throw
-    // store infos in sv
+	long parsePort = std::atol(port);
+	if (parsePort < 1024 || parsePort > 65535) // because ports are stored in 16-bit unsigned int
+		throw InvalidPortNumber();
+	this->_serverPort = static_cast<int>(parsePort);
+
+	std::string passParsed(password);
+	if (passParsed.empty())
+		throw PassEmpty();
+	else if (passParsed.size() > 100)
+		throw PassTooBig();
+	for (size_t i = 0; i < passParsed.length(); i++)
+		if (!std::isprint(passParsed[i]))
+			throw InvalidPass();
+	this->_password = passParsed;
 }
- */
+
 
 // In setup() we're creating a listening socket for the server - the endpoint
 // for clients to connect, with the defined settings asked for the project.
     
 void	Server::setup(char *port, char *password)
 {
-	(void)password;
-    // parse arguments
-		// port nb
-		// password
-
+	this->_nbConnected = 0;
+	parseArguments(port, password);
 
     // creates socket for server's endpoint
     // Creating a listening (passive) socket to receive new connections
     int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (listenSocket <= -1)
-        throw 'a'; // FailedtoCreate listening socket
+        throw FailedtoCreateServerSocket();
 
 
 	// ↓ Settings that are required to set before turn the socket passive ↓
@@ -52,23 +60,23 @@ void	Server::setup(char *port, char *password)
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) <= -1)
     {
 		std::cerr << std::strerror(errno) << '\n';
-	    throw 'b'; // FailedtoSetSockSettings
+	    throw FailedtoSetSockSettings();
 	}
 	
 	// Setting the socket to be non-blocking - as asked in the subject
 	if (fcntl(listenSocket, F_SETFL, O_NONBLOCK) <= -1)
-        throw 'c'; // FailedtoTurnSocketNonBlocking
+        throw FailedtoTurnSocketNonBlocking();
 
 
 	// ↓ Here is the part we link and connect the socket to become a listening asset ↓
 
     // Doing the binding (assigning address to socket)
     if (bind(listenSocket, reinterpret_cast<sockaddr *>(&sockSettings), sizeof(sockSettings)) <= -1)
-        throw 'd'; // FailedtoBind listening socket
+        throw FailedtoBindServerSock(); // FailedtoBind listening socket
 
     // Listen will "turn the socket passive"
     if (listen(listenSocket, SOMAXCONN) <= -1)
-		throw 'e'; // FailedtoListen listening socket
+		throw FailedtoTurnListenSock();
 
 	this->_svEndpoint = listenSocket;
 	struct pollfd addToPoll;
@@ -76,20 +84,20 @@ void	Server::setup(char *port, char *password)
 	addToPoll.events = POLLIN;
 	addToPoll.revents = 0;
 	this->_clientsPoll.push_back(addToPoll);
+	this->_nbConnected++;
 }
 
 void	Server::runtime()
 {
-    // Loop
 	while (1)
 	{
 		// using poll to identify if there is new data from the client connections
 		// and if there is poll will edit the given struct pollfd * variable, so when
 		// we iter it, we can act according to the new data that was found
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
-			throw ; // PollFailedtoRetrieveInfo
+			throw PollFailedtoRetrieveInfo();
 
-		for (size_t i = 0; i < _clientsPoll.size(); i++)
+		for (unsigned int i = 0; i < _nbConnected; i++)
 		{
 			// for legibility
 			short	cEvent = _clientsPoll[i].revents;
@@ -97,7 +105,8 @@ void	Server::runtime()
 	
 			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP) // disconnect error, invalid or hung up connections
 			{
-				//unregisterClient(it);	
+				// unregisterClient(it);
+				i--;
 			}
 			else if (cFd == this->_svEndpoint && (cEvent & POLLIN)) // accept new connections and add to the poll
 			{

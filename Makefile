@@ -17,7 +17,9 @@ SRC_DIR		=	src/
 SRC_FILES	=	\
 				main.cpp \
 				Server.cpp \
-				ServerPoll.cpp
+				ServerPoll.cpp \
+				errorMsgs/ServerMsgs.cpp
+				
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 

@@ -1,25 +1,25 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "Client.hpp"
+#include "Channel.hpp"
 #include <exception>
 #include <poll.h>
+#include <string>
 #include <vector>
 
 typedef typename std::vector<struct pollfd>::iterator pollfdIter;
 
 // Notes from metro thinking time aahh (it means this needs reviewing)
-class Client
-{
-	public:
-	int socketFd;
-};
+
 
 class Server
 {
 	private:
-	int		_serverPort;
-	int		_password;
-	int		_svEndpoint;
+	std::string		_password;
+	int				_serverPort;
+	int				_svEndpoint;
+	unsigned int	_nbConnected;
 
 	std::vector <struct pollfd>	_clientsPoll;
 	std::vector <Client>		_clients; //connected clients to the sv
@@ -32,20 +32,56 @@ class Server
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
 	void    unregisterClient(pollfdIter clientInfo);
-	//void    handleClientData(pollfdIter clientInfo);
 	void    handleClientData(struct pollfd *clientInfo);
-};
 
-class Channel
-{
-	private:
-	Client Clients; // these are the ones connected to the channel
-	// should the ops be a derived from client?
-	//sm more important cmds (like ban, kick)
-	//most cmds (like join, privmsg)
+	class	InvalidPortNumber : public std::exception
+	{ public: const char *what() const throw();	};
 
-	public:
-	//OCF
+	class	PassEmpty : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	PassTooBig : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	InvalidPass : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	FailedtoCreateServerSocket : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	FailedtoSetSockSettings : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	FailedtoTurnSocketNonBlocking : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	FailedtoBindServerSock : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	FailedtoTurnListenSock : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
+	class	PollFailedtoRetrieveInfo : public std::exception
+	{
+		public:
+		const char *what() const throw();
+	};
 };
 
 
