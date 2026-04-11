@@ -97,26 +97,35 @@ void	Server::runtime()
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 			throw PollFailedtoRetrieveInfo();
 
-		for (unsigned int i = 0; i < _nbConnected; i++)
+		try
 		{
-			// for legibility
-			short	cEvent = _clientsPoll[i].revents;
-			int		cFd = _clientsPoll[i].fd;
-	
-			if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || cEvent & POLLHUP) // disconnect error, invalid or hung up connections
+			for (unsigned int i = 0; i < _nbConnected; i++)
 			{
-				// unregisterClient(it);
-				i--;
-			}
-			else if (cFd == this->_svEndpoint && (cEvent & POLLIN)) // accept new connections and add to the poll
-			{
-				std::cout << "Connected user"<< '\n';
-				registerClient();
-			}
-			else if (cEvent & POLLIN) // new read input data
-			{
-				handleClientData(&_clientsPoll[i]);
+				// for legibility
+				short	cEvent = _clientsPoll[i].revents;
+				int		cFd = _clientsPoll[i].fd;
+		
+				if ((cEvent & POLLERR) || (cEvent & POLLNVAL) || (cEvent & POLLHUP)) // disconnect error, invalid or hung up connections
+				{
+					unregisterClient(_clientsPoll.begin() + i);
+					i--;
+				}
+				else if (cFd == this->_svEndpoint && (cEvent & POLLIN)) // accept new connections and add to the poll
+				{
+					std::cout << "Connected user"<< '\n';
+					registerClient();
+				}
+				else if (cEvent & POLLIN) // new read input data
+				{
+					handleClientData(_clients.at(cFd));
+				}
 			}
 		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		
+
 	}
 }

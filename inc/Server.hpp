@@ -7,6 +7,7 @@
 #include <poll.h>
 #include <string>
 #include <vector>
+#include <map>
 
 typedef typename std::vector<struct pollfd>::iterator pollfdIter;
 
@@ -16,23 +17,26 @@ typedef typename std::vector<struct pollfd>::iterator pollfdIter;
 class Server
 {
 	private:
+
 	std::string		_password;
 	int				_serverPort;
 	int				_svEndpoint;
 	unsigned int	_nbConnected;
 
-	std::vector <struct pollfd>	_clientsPoll;
-	std::vector <Client>		_clients; //connected clients to the sv
-	//Channel						_channels[]; //existing channels at sv
+	std::vector <struct pollfd>		_clientsPoll;
+	std::map <int, Client>			_clients; //connected clients to the sv
+	// std::vector <Client>			_clients; //connected clients to the sv
+	std::map<std::string, Channel>	_channels; //existing channels at sv
 	
 	public:
 	//OCF
+	
 	void    parseArguments(char *port, char *password);
 	void	setup(char *port, char *password); // check everything for start up
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
 	void    unregisterClient(pollfdIter clientInfo);
-	void    handleClientData(struct pollfd *clientInfo);
+	void    handleClientData(Client clientInfo);
 
 	class	InvalidPortNumber : public std::exception
 	{ public: const char *what() const throw();	};

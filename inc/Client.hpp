@@ -3,8 +3,17 @@
 
 class Client
 {
+	private:
+
+	int			socketFd;
+	std::string	buffer;
+	std::string	nick;
+	std::string	user;
+
 	public:
-	int socketFd;
+
+	Client(int fd);
+	int	getSocketFd(void);
 };
 
 #endif

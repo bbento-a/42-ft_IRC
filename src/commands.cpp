@@ -9,11 +9,8 @@ https://modern.ircdocs.horse/#connection-messages
      Command: NICK
   Parameters: <nickname>
 
-     Command: USER (is it mandatory?)
+     Command: USER
   Parameters: <username> 0 * <realname>
-
-       Command: OPER
-  Parameters: <name> <password>
 
     Command: QUIT
  Parameters: [<reason>]
@@ -36,11 +33,11 @@ https://modern.ircdocs.horse/#connection-messages
       Command: KICK
    Parameters: <channel> <user> *( "," <user> ) [<comment>]
 
-
-
      Command: MODE
   Parameters: <target> [<modestring> [<mode arguments>...]]
 
+
+  
        Command: PRIVMSG
   Parameters: <target>{,<target>} <text to be sent>
 */
