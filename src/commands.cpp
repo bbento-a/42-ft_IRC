@@ -5,16 +5,31 @@ https://modern.ircdocs.horse/#connection-messages
 
      Command: PASS
   Parameters: <password>
+  Errors:
+	ERR_NEEDMOREPARAMS (461)
+	ERR_ALREADYREGISTERED (462)
+	ERR_PASSWDMISMATCH (464) 
 
      Command: NICK
   Parameters: <nickname>
+  Errors:
+	ERR_NONICKNAMEGIVEN (431)
+	ERR_ERRONEUSNICKNAME (432)
+	ERR_NICKNAMEINUSE (433)
+	ERR_NICKCOLLISION (436)
+
 
      Command: USER
   Parameters: <username> 0 * <realname>
+  Errors:
+   ERR_NEEDMOREPARAMS (461)
+   ERR_ALREADYREGISTERED (462) 
+
 
     Command: QUIT
- Parameters: [<reason>]
-
+   Parameters: [<reason>]
+  Errors:
+   None
 
 
       Command: JOIN
@@ -37,7 +52,7 @@ https://modern.ircdocs.horse/#connection-messages
   Parameters: <target> [<modestring> [<mode arguments>...]]
 
 
-  
+
        Command: PRIVMSG
   Parameters: <target>{,<target>} <text to be sent>
 */

@@ -1,6 +1,8 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include <string>
+
 class Client
 {
 	private:
@@ -13,7 +15,9 @@ class Client
 	public:
 
 	Client(int fd);
-	int	getSocketFd(void);
+	int			getSocketFd(void) const;
+	void		setBuffer(std::string str);
+	std::string	getBuffer(void) const;
 };
 
 #endif

@@ -53,6 +53,48 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 // Logic for receiving data from wawawas:
 // Make buffer to read and store info
 // Send received data for corresponded place
+
+void    Server::handleClientData(Client clientInfo)
+{
+    // Make a buffer to store information from a client
+    // Store that information
+    char    buf[512];
+    int     retCode = -1;
+    for (retCode = recv(clientInfo.getSocketFd(), &buf, 512, 0); retCode >= 0;)
+    {
+        if (retCode == 0 && clientInfo.getBuffer().empty()) // if the program receives an EOF without any message to be sent (close connection)
+            break ;
+        std::string tmp = clientInfo.getBuffer();
+        tmp += buf;
+        clientInfo.setBuffer(tmp);
+    }
+    if (retCode <= -1)
+        throw ; //FailedtoReceiveMsg
+    else if (retCode == 0 && clientInfo.getBuffer().empty())
+    {
+        //unregister client
+    }
+    else // handle data
+    {
+        
+    }
+
+
+    // else
+    // {
+    //    //  (Testing server setup)
+    //     for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
+    //     {
+    //         if (it->fd == this->_svEndpoint) // if I send it to the listening socket it will SIGPIPE
+    //             continue ;
+    //         retCode = send((*it).fd, clientInfo.getBuffer().c_str(), retCode, 0);
+    //         if (retCode <= -1)
+    //             throw 'i'; //FailedtoSendMsg
+    //     }
+    // }
+}
+
+/* 
 void    Server::handleClientData(Client clientInfo)
 {
     // Make a buffer to store information from a client
@@ -82,26 +124,4 @@ void    Server::handleClientData(Client clientInfo)
         }
     }
 }
-
-/* s clientIn
-void    Server::handleClientData(pollfdIter clientInfo)
-{
-    char buf[100];
-    int  retCode = -1;
-    retCode = recv(clientInfo->fd, &buf, 100, 0);
-    if (retCode <= -1)
-        throw ;//FailedtoReceiveMsg
-    else
-    {
-        for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
-        {
-            retCode = send(it->fd, buf, 100, 0);
-            if (retCode <= -1)
-                throw 'i';//FailedtoSendMsg
-        }
-    }
-    //  Get info from a client, and store it
-    //  Send that info to everyone in sv
-    //  (Testing server setup)
-}
-*/
+ */

@@ -11,8 +11,20 @@
 
 typedef typename std::vector<struct pollfd>::iterator pollfdIter;
 
-// Notes from metro thinking time aahh (it means this needs reviewing)
-
+typedef	enum cmdsKeyword
+{
+	PASS,
+	NICK,
+	USER,
+	QUIT,
+	JOIN,
+	PART,
+	TOPIC,
+	INVITE,
+	KICK,
+	MODE,
+	PRIVMSG
+};
 
 class Server
 {
@@ -30,62 +42,45 @@ class Server
 	
 	public:
 	//OCF
-	
+
 	void    parseArguments(char *port, char *password);
 	void	setup(char *port, char *password); // check everything for start up
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
 	void    unregisterClient(pollfdIter clientInfo);
 	void    handleClientData(Client clientInfo);
+	void	handleData(Client curClient);
 
 	class	InvalidPortNumber : public std::exception
 	{ public: const char *what() const throw();	};
 
 	class	PassEmpty : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	PassTooBig : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	InvalidPass : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	FailedtoCreateServerSocket : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	FailedtoSetSockSettings : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	FailedtoTurnSocketNonBlocking : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	FailedtoBindServerSock : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	FailedtoTurnListenSock : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 	class	PollFailedtoRetrieveInfo : public std::exception
-	{
-		public:
-		const char *what() const throw();
-	};
+	{ public: const char *what() const throw(); };
+	
 };
 
 
