@@ -1,3 +1,4 @@
+#include "../inc/Server.hpp"
 /* 
 my source for cmds: 
 https://modern.ircdocs.horse/#connection-messages
@@ -56,3 +57,48 @@ https://modern.ircdocs.horse/#connection-messages
        Command: PRIVMSG
   Parameters: <target>{,<target>} <text to be sent>
 */
+
+void  passCmd(Client client, std::vector<std::string> args)
+{
+   
+}
+void  nickCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  userCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  quitCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  joinCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  partCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  topicCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  inviteCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  kickCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  modeCmd(Client client, std::vector<std::string> args)
+{
+
+}
+void  privmsgCmd(Client client, std::vector<std::string> args)
+{
+
+}

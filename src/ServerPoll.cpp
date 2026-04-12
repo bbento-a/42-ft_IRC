@@ -74,6 +74,14 @@ void    Server::handleClientData(Client clientInfo)
     {
         //unregister client
     }
+    else if (*(clientInfo.getBuffer().end()--) != '\n')
+    {
+        return ;
+        // because if you receive and EOF without newline, we don't want
+        // the server to process that data right in this moment,
+        // we just want it to store for the next time it receives
+        // more information from the client that sent the later data mentioned
+    }
     else // handle data
     {
         

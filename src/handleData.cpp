@@ -7,15 +7,23 @@ void	Server::handleData(Client curClient)
 	std::vector<std::string>   processedBuf;
 	std::stringstream          procStream(curClient.getBuffer());
 	std::string                curToken;
+	curClient.setBuffer("");
 	while(std::getline(procStream, curToken, ' '))
 	{
+		if (curToken[0] == ':')
+		{
+			std::string tmp;
+			std::getline(procStream, tmp);
+			curToken += tmp;
+		}
 		processedBuf.push_back(curToken);
 	}
-
+	if (processedBuf.empty())
+		return ; // Might need to handle in a different way
 	switch (curToken[0])
 	{
 		case PASS:
-
+		
         	break;
 		case NICK:
 
@@ -71,10 +79,10 @@ void	Server::handleData(Client curClient)
   Parameters: <nickname>
 
      Command: USER
-  Parameters: <username> 0 * <realname>
+  Parameters: <username> 0 * : <realname>
 
      Command: QUIT
- Parameters: [<reason>]
+ Parameters: : [<reason>]
 
 
 
@@ -83,16 +91,16 @@ void	Server::handleData(Client curClient)
   Alt Params: 0
 
      Command: PART
-  Parameters: <channel>{,<channel>} [<reason>]
+  Parameters: <channel>{,<channel>} : [<reason>]
 
      Command: TOPIC
-  Parameters: <channel> [<topic>]
+  Parameters: <channel> : [<topic>]
 
      Command: INVITE
   Parameters: <nickname> <channel>
 
       Command: KICK
-   Parameters: <channel> <user> *( "," <user> ) [<comment>]
+   Parameters: <channel> <user> *( "," <user> ) : [<comment>]
 
      Command: MODE
   Parameters: <target> [<modestring> [<mode arguments>...]]
@@ -100,5 +108,5 @@ void	Server::handleData(Client curClient)
 
   
        Command: PRIVMSG
-  Parameters: <target>{,<target>} <text to be sent>
+  Parameters: <target>{,<target>} : <text to be sent>
 */
