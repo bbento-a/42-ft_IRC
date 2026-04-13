@@ -2,16 +2,52 @@
 #define CHANNEL_HPP
 
 #include "Client.hpp"
+#include <string>
+#include <map>
+#include <set>
 
 class Channel
 {
 	private:
-	Client Clients; // these are the ones connected to the channel
-	// should the ops be a derived from client?
-	//sm more important cmds (like ban, kick)
-	//most cmds (like join, privmsg)
+
+	std::string				_name;
+	std::string				_topic;
+	std::string				_key;       // MODE +k
+	std::map<int, Client *>	_members;   // fd -> Client (regular + ops)
+	std::set<int>			_operators; // fds with op privilege
+	std::set<int>			_invited;   // fds invited (for MODE +i)
+
+	bool	_inviteOnly;  // MODE +i
+	bool	_topicLocked; // MODE +t (only ops can change topic)
+	bool	_hasKey;      // MODE +k
 
 	public:
-	//OCF
+
+	Channel(const std::string &name);
+
+	std::string	getName(void) const;
+	std::string	getTopic(void) const;
+
+	bool	hasMember(int fd) const;
+	bool	isOperator(int fd) const;
+	bool	isInvited(int fd) const;
+	bool	isInviteOnly(void) const;
+	bool	isTopicLocked(void) const;
+	bool	checkKey(const std::string &key) const;
+
+	void	addMember(Client *client);
+	void	removeMember(int fd);
+	void	addOperator(int fd);
+	void	removeOperator(int fd);
+	void	addInvite(int fd);
+
+	void	setTopic(const std::string &topic);
+	void	broadcast(const std::string &msg, int excludeFd = -1) const;
+
+	void	setInviteOnly(bool val);
+	void	setTopicLocked(bool val);
+	void	setKey(const std::string &key);
+	void	clearKey(void);
 };
+
 #endif
