@@ -18,6 +18,7 @@ SRC_FILES	=	\
 				main.cpp \
 				Server.cpp \
 				ServerPoll.cpp \
+				Client.cpp \
 				errorMsgs/ServerMsgs.cpp
 				
 
