@@ -84,7 +84,7 @@ void    Server::handleClientData(Client clientInfo)
     }
     else // handle data
     {
-        
+        handleData(clientInfo);
     }
 
 

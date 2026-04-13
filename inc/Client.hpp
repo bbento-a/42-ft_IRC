@@ -3,6 +3,9 @@
 
 #include <string>
 
+
+//:)
+
 class Client
 {
 	private:
@@ -11,6 +14,9 @@ class Client
 	std::string	buffer;
 	std::string	nick;
 	std::string	user;
+	//	realname;
+	//	isAuthenticated;
+	
 
 	public:
 

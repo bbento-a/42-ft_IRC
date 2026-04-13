@@ -50,7 +50,7 @@ void	Server::setup(char *port, char *password)
     // sockaddr_in is used for IPv4 
     sockaddr_in sockSettings;
     sockSettings.sin_family = AF_INET;
-    sockSettings.sin_port = htons(std::atoi(port)); // add port that was given in args
+    sockSettings.sin_port = htons(this->_serverPort); // add port that was given in args
     sockSettings.sin_addr.s_addr = INADDR_ANY;
     // htons() is used to change the bits order to big endian, which is the order used in networking
     // htons -> "host to network short"
@@ -58,10 +58,7 @@ void	Server::setup(char *port, char *password)
 	// Setting the socket to be able to reuse the address/port,
 	// without waiting for TIME_WAIT (default time in TCP for when a server stops running)
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) <= -1)
-    {
-		std::cerr << std::strerror(errno) << '\n';
 	    throw FailedtoSetSockSettings();
-	}
 	
 	// Setting the socket to be non-blocking - as asked in the subject
 	if (fcntl(listenSocket, F_SETFL, O_NONBLOCK) <= -1)
