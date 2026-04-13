@@ -1,49 +1,87 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "Client.hpp"
+#include "Channel.hpp"
 #include <exception>
 #include <poll.h>
+#include <string>
 #include <vector>
+#include <map>
 
-// Notes from metro thinking time aahh (it means this needs reviewing)
-class Client{};
+typedef typename std::vector<struct pollfd>::iterator pollfdIter;
+
+typedef	enum cmdsKeyword
+{
+	PASS,
+	NICK,
+	USER,
+	QUIT,
+	JOIN,
+	PART,
+	TOPIC,
+	INVITE,
+	KICK,
+	MODE,
+	PRIVMSG
+};
 
 class Server
 {
 	private:
-	int		serverPort;
-	int		password;
-	int		svEndpoint;
 
-	std::vector <struct pollfd>	clientsPoll;
-	Client			Clients; //connected clients to the sv
-	Channel			Channels[]; //existing channels at sv
+	std::string		_password;
+	int				_serverPort;
+	int				_svEndpoint;
+	unsigned int	_nbConnected;
+
+	std::vector <struct pollfd>		_clientsPoll;
+	std::map <int, Client>			_clients; //connected clients to the sv
+	// std::vector <Client>			_clients; //connected clients to the sv
+	std::map<std::string, Channel>	_channels; //existing channels at sv
 	
 	public:
 	//OCF
+
 	void    parseArguments(char *port, char *password);
 	void	setup(char *port, char *password); // check everything for start up
-	void	runtime(); //loop of connections
-	void	registerClient(); //check client infos to link them to the sv
-	void	connectClient(); //maybe?
+	void	runtime(void); //loop of connections
+	void	registerClient(void); //check client infos to link them to the sv
+	void    unregisterClient(pollfdIter clientInfo);
+	void    handleClientData(Client clientInfo);
+	void	handleData(Client curClient);
+
+	class	InvalidPortNumber : public std::exception
+	{ public: const char *what() const throw();	};
+
+	class	PassEmpty : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	PassTooBig : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	InvalidPass : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	FailedtoCreateServerSocket : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	FailedtoSetSockSettings : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	FailedtoTurnSocketNonBlocking : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	FailedtoBindServerSock : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	FailedtoTurnListenSock : public std::exception
+	{ public: const char *what() const throw(); };
+	
+	class	PollFailedtoRetrieveInfo : public std::exception
+	{ public: const char *what() const throw(); };
+	
 };
-
-class Channel
-{
-	private:
-	Client Clients; // these are the ones connected to the channel
-	// should the ops be a derived from client?
-	//sm more important cmds (like ban, kick)
-	//most cmds (like join, msg)
-
-	public:
-	//OCF
-};
-
-
-// 2 ways of doing Channels
-// Or create for each channel an object, and these are store in the server object
-// Or give "tags" to the clients categorizing them with the channels they're in
 
 
 #endif

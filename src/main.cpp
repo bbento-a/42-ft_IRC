@@ -8,7 +8,8 @@ int main (int argc, char **argv)
 {
     if (argc != 3)
     {
-        std::cerr << "Wrong usage..." << '\n';
+        std::cerr << "Number of arguments for usage incorrect" << '\n';
+        std::cout << "Try ./IRC <port> <password>" << '\n';
         return (1);
     }
 
@@ -21,6 +22,6 @@ int main (int argc, char **argv)
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << '\n';
     }
 }
