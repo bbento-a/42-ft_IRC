@@ -33,7 +33,7 @@ void    Server::registerClient(void)
 	newClientPoll.revents = 0;
 
     Client newClient(fd);
-    this->_clients.insert(std::pair(fd, newClient));
+    this->_clients.insert(std::make_pair(fd, newClient));
     this->_clientsPoll.push_back(newClientPoll);
 	this->_nbConnected++;
 }
@@ -54,7 +54,7 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 // Make buffer to read and store info
 // Send received data for corresponded place
 
-void    Server::handleClientData(Client clientInfo)
+/* void    Server::handleClientData(Client clientInfo)
 {
     // Make a buffer to store information from a client
     // Store that information
@@ -100,9 +100,9 @@ void    Server::handleClientData(Client clientInfo)
     //             throw 'i'; //FailedtoSendMsg
     //     }
     // }
-}
+} */
 
-/* 
+
 void    Server::handleClientData(Client clientInfo)
 {
     // Make a buffer to store information from a client
@@ -132,4 +132,3 @@ void    Server::handleClientData(Client clientInfo)
         }
     }
 }
- */

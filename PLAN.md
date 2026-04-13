@@ -41,7 +41,6 @@ Based on IRC protocol (RFC 1459) and your server structure, a Client class needs
 - `user` - Client username (no realname needed per subject requirements)
 - **Server operator flag (IRCop)**: Is this client a server operator? (global privilege)
 - Message buffers (incoming/outgoing data) - to be review
-- Pointer/reference list to Channels the client has joined (bidirectional link)
 
 **Essential Functionality:**
 - Send/receive messages over the socket (using fd)

@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-typedef typename std::vector<struct pollfd>::iterator pollfdIter;
+typedef std::vector<struct pollfd>::iterator pollfdIter;
 
 typedef	enum cmdsKeyword
 {
@@ -24,7 +24,7 @@ typedef	enum cmdsKeyword
 	KICK,
 	MODE,
 	PRIVMSG
-};
+} cmdsKeyword;
 
 class Server
 {
