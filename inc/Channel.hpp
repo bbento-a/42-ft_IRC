@@ -20,6 +20,8 @@ class Channel
 	bool	_inviteOnly;  // MODE +i
 	bool	_topicLocked; // MODE +t (only ops can change topic)
 	bool	_hasKey;      // MODE +k
+	int		_limit;       // MODE +l
+	bool	_hasLimit;    // MODE +l
 
 	public:
 
@@ -31,9 +33,14 @@ class Channel
 	bool	hasMember(int fd) const;
 	bool	isOperator(int fd) const;
 	bool	isInvited(int fd) const;
-	bool	isInviteOnly(void) const;
-	bool	isTopicLocked(void) const;
-	bool	checkKey(const std::string &key) const;
+	bool		isInviteOnly(void) const;
+	bool		isTopicLocked(void) const;
+	bool		checkKey(const std::string &key) const;
+	std::string	getKey(void) const;
+	bool		hasKey(void) const;
+	int			getLimit(void) const;
+	bool		hasLimit(void) const;
+	bool		isFull(void) const;
 
 	void	addMember(Client *client);
 	void	removeMember(int fd);
@@ -48,6 +55,8 @@ class Channel
 	void	setTopicLocked(bool val);
 	void	setKey(const std::string &key);
 	void	clearKey(void);
+	void	setLimit(int limit);
+	void	clearLimit(void);
 };
 
 #endif

@@ -51,6 +51,9 @@ class Server
 	void    handleClientData(Client clientInfo);
 	void	handleData(Client curClient);
 
+	Channel	*getChannel(const std::string &name);
+	Client	*getClientByNick(const std::string &nick);
+
 	class	InvalidPortNumber : public std::exception
 	{ public: const char *what() const throw();	};
 

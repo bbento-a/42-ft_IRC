@@ -3,7 +3,8 @@
 // Initialises a channel with its name. All MODE flags start off.
 Channel::Channel(const std::string &name)
 	: _name(name), _topic(""), _key(""),
-	  _inviteOnly(false), _topicLocked(false), _hasKey(false)
+	  _inviteOnly(false), _topicLocked(false), _hasKey(false),
+	  _limit(0), _hasLimit(false)
 {}
 
 // Returns the channel name (e.g. "#general").
@@ -57,6 +58,18 @@ bool	Channel::isTopicLocked(void) const
 bool	Channel::checkKey(const std::string &key) const
 {
 	return (_hasKey && _key == key);
+}
+
+// Returns the channel key (empty string if none). Used in RPL_CHANNELMODEIS.
+std::string	Channel::getKey(void) const
+{
+	return _key;
+}
+
+// Returns true if a key is currently set (+k active).
+bool	Channel::hasKey(void) const
+{
+	return _hasKey;
 }
 
 // Adds a client to the channel's member list, keyed by their socket fd.
@@ -136,4 +149,37 @@ void	Channel::clearKey(void)
 {
 	_key = "";
 	_hasKey = false;
+}
+
+// Sets the user limit and activates the +l flag (MODE +l <limit>).
+void	Channel::setLimit(int limit)
+{
+	_limit = limit;
+	_hasLimit = true;
+}
+
+// Removes the user limit and deactivates the +l flag (MODE -l).
+void	Channel::clearLimit(void)
+{
+	_limit = 0;
+	_hasLimit = false;
+}
+
+// Returns the current user limit. Meaningful only when hasLimit() is true.
+int	Channel::getLimit(void) const
+{
+	return _limit;
+}
+
+// Returns true if a user limit is currently set (+l active).
+bool	Channel::hasLimit(void) const
+{
+	return _hasLimit;
+}
+
+// Returns true if the channel is full (member count >= limit).
+// JOIN should call this when hasLimit() is true.
+bool	Channel::isFull(void) const
+{
+	return _hasLimit && (int)_members.size() >= _limit;
 }

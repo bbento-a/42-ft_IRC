@@ -126,3 +126,23 @@ void	Server::runtime()
 
 	}
 }
+
+// Returns a pointer to the channel with the given name, or NULL if not found.
+Channel	*Server::getChannel(const std::string &name)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	if (it == _channels.end())
+		return NULL;
+	return &it->second;
+}
+
+// Returns a pointer to the connected client with the given nick, or NULL.
+Client	*Server::getClientByNick(const std::string &nick)
+{
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+			return &it->second;
+	}
+	return NULL;
+}

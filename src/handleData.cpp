@@ -1,6 +1,27 @@
 #include "../inc/Server.hpp"
 
 #include <sstream>
+
+// Forward declaration - defined in commands.cpp
+void	modeCmd(Client &caller, Server &server, std::vector<std::string> &args);
+
+// Maps a raw command string to the cmdsKeyword enum. Returns -1 if unknown.
+static int	parseCmd(const std::string &cmd)
+{
+	if (cmd == "PASS")    return PASS;
+	if (cmd == "NICK")    return NICK;
+	if (cmd == "USER")    return USER;
+	if (cmd == "QUIT")    return QUIT;
+	if (cmd == "JOIN")    return JOIN;
+	if (cmd == "PART")    return PART;
+	if (cmd == "TOPIC")   return TOPIC;
+	if (cmd == "INVITE")  return INVITE;
+	if (cmd == "KICK")    return KICK;
+	if (cmd == "MODE")    return MODE;
+	if (cmd == "PRIVMSG") return PRIVMSG;
+	return -1;
+}
+
 void	Server::handleData(Client curClient)
 {
 	// Parse data received from message	
@@ -20,7 +41,7 @@ void	Server::handleData(Client curClient)
 	}
 	if (processedBuf.empty())
 		return ; // Might need to handle in a different way
-	switch (curToken[0])
+	switch (parseCmd(processedBuf[0]))
 	{
 		case PASS:
 		
@@ -50,7 +71,7 @@ void	Server::handleData(Client curClient)
 
 			break;
 		case MODE:
-
+			modeCmd(curClient, *this, processedBuf);
 			break;
 		case PRIVMSG:
 
