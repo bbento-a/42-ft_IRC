@@ -130,8 +130,15 @@ void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	if (caller.isRegistered())
 		sendWelcome(caller);
 }
-void  quitCmd(Client, std::vector<std::string>)
+void  quitCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	std::string reason = (args.size() >= 2) ? args[1] : "Client quit";
+	if (!reason.empty() && reason[0] == ':')
+		reason.erase(0, 1);
+	std::string quitMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost QUIT :" + reason + "\r\n";
+	server.removeFromAllChannels(caller.getSocketFd(), quitMsg);
+	caller.sendMsg("ERROR :Closing connection\r\n");
+	caller.setWantsQuit(true);
 }
 void  joinCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
@@ -261,8 +268,48 @@ void  topicCmd(Client, std::vector<std::string>)
 void  inviteCmd(Client, std::vector<std::string>)
 {
 }
-void  kickCmd(Client, std::vector<std::string>)
+void  kickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 3)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " KICK :Not enough parameters\r\n");
+		return ;
+	}
+	const std::string &chanName = args[1];
+	const std::string &targetNick = args[2];
+	std::string reason = (args.size() >= 4) ? args[3] : caller.getNick();
+	if (!reason.empty() && reason[0] == ':')
+		reason.erase(0, 1);
+	Channel *chan = server.getChannel(chanName);
+	if (!chan)
+	{
+		caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + chanName + " :No such channel\r\n");
+		return ;
+	}
+	if (!chan->hasMember(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + chanName + " :You're not on that channel\r\n");
+		return ;
+	}
+	if (!chan->isOperator(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 482 " + caller.getNick() + " " + chanName + " :You're not channel operator\r\n");
+		return ;
+	}
+	Client *target = server.getClientByNick(targetNick);
+	if (!target || !chan->hasMember(target->getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 441 " + caller.getNick() + " " + targetNick + " " + chanName + " :They aren't on that channel\r\n");
+		return ;
+	}
+	std::string kickMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
+	chan->broadcast(kickMsg, -1);
+	chan->removeMember(target->getSocketFd());
 }
 void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {

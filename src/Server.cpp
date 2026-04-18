@@ -115,6 +115,11 @@ void	Server::runtime()
 				else if (cEvent & POLLIN) // new read input data
 				{
 					handleClientData(_clients.at(cFd));
+					if (_clients.count(cFd) && _clients.at(cFd).wantsQuit())
+					{
+						unregisterClient(_clientsPoll.begin() + i);
+						i--;
+					}
 				}
 			}
 		}
@@ -171,4 +176,17 @@ bool	Server::isNickInUse(const std::string &nick) const
 			return true;
 	}
 	return false;
+}
+
+// Broadcasts quitMsg to every channel the client is in, then removes them.
+void	Server::removeFromAllChannels(int fd, const std::string &quitMsg)
+{
+	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	{
+		if (it->second.hasMember(fd))
+		{
+			it->second.broadcast(quitMsg, fd);
+			it->second.removeMember(fd);
+		}
+	}
 }

@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -45,6 +46,7 @@ void    Server::registerClient(void)
 void    Server::unregisterClient(pollfdIter clientInfo)
 {
     //erase client from individual channels
+    close(clientInfo->fd);
     this->_clients.erase(clientInfo->fd);
     this->_clientsPoll.erase(clientInfo);
 	this->_nbConnected--;

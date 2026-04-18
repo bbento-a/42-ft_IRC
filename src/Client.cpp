@@ -3,7 +3,7 @@
 
 Client::Client(int fd)
 	: socketFd(fd), buffer(""), nick(""), user(""),
-	  passVerified(false), nickSet(false), userSet(false)
+	  passVerified(false), nickSet(false), userSet(false), _wantsQuit(false)
 {}
 
 int	Client::getSocketFd(void) const
@@ -51,6 +51,16 @@ void	Client::setPassVerified(bool val)
 bool	Client::isPassVerified(void) const
 {
 	return passVerified;
+}
+
+void	Client::setWantsQuit(bool val)
+{
+	_wantsQuit = val;
+}
+
+bool	Client::wantsQuit(void) const
+{
+	return _wantsQuit;
 }
 
 // A client is fully registered once PASS was validated, NICK and USER were received.

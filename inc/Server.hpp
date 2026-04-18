@@ -54,6 +54,7 @@ class Server
 	Channel	*getChannel(const std::string &name);
 	Channel	&getOrCreateChannel(const std::string &name);
 	Client	*getClientByNick(const std::string &nick);
+	void	removeFromAllChannels(int fd, const std::string &quitMsg);
 	bool	checkPassword(const std::string &pass) const;
 	bool    isNickInUse(const std::string &nick) const;
 

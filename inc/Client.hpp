@@ -14,6 +14,7 @@ class Client
 	bool		passVerified;
 	bool		nickSet;
 	bool		userSet;
+	bool		_wantsQuit;
 
 	public:
 
@@ -32,6 +33,9 @@ class Client
 
 	void		setPassVerified(bool val);
 	bool		isPassVerified(void) const;
+
+	void		setWantsQuit(bool val);
+	bool		wantsQuit(void) const;
 
 	bool		isRegistered(void) const;
 
