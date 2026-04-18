@@ -7,7 +7,9 @@ void	passCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	nickCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	userCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	joinCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	partCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	modeCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	privmsgCmd(Client &caller, Server &server, std::vector<std::string> &args);
 
 // Maps a raw command string to the cmdsKeyword enum. Returns -1 if unknown.
 static int	parseCmd(const std::string &cmd)
@@ -74,7 +76,7 @@ void	Server::handleData(Client &curClient)
 			joinCmd(curClient, *this, processedBuf);
 			break;
 		case PART:
-
+			partCmd(curClient, *this, processedBuf);
 			break;
 		case TOPIC:
 
@@ -89,7 +91,7 @@ void	Server::handleData(Client &curClient)
 			modeCmd(curClient, *this, processedBuf);
 			break;
 		case PRIVMSG:
-
+			privmsgCmd(curClient, *this, processedBuf);
 			break;
       
       default:

@@ -213,8 +213,47 @@ void  joinCmd(Client &caller, Server &server, std::vector<std::string> &args)
 		caller.sendMsg(":irc.server 366 " + caller.getNick() + " " + name + " :End of /NAMES list\r\n");
 	}
 }
-void  partCmd(Client, std::vector<std::string>)
+void  partCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " PART :Not enough parameters\r\n");
+		return ;
+	}
+	std::string reason = (args.size() >= 3) ? args[2] : caller.getNick();
+	if (!reason.empty() && reason[0] == ':')
+		reason.erase(0, 1);
+	std::vector<std::string> chanNames;
+	{
+		std::istringstream ss(args[1]);
+		std::string tok;
+		while (std::getline(ss, tok, ','))
+			chanNames.push_back(tok);
+	}
+	for (size_t i = 0; i < chanNames.size(); i++)
+	{
+		const std::string &name = chanNames[i];
+		Channel *chan = server.getChannel(name);
+		if (!chan)
+		{
+			caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + name + " :No such channel\r\n");
+			continue ;
+		}
+		if (!chan->hasMember(caller.getSocketFd()))
+		{
+			caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + name + " :You're not on that channel\r\n");
+			continue ;
+		}
+		std::string partMsg = ":" + caller.getNick() + "!" + caller.getUser()
+			+ "@localhost PART " + name + " :" + reason + "\r\n";
+		chan->broadcast(partMsg, -1);
+		chan->removeMember(caller.getSocketFd());
+	}
 }
 void  topicCmd(Client, std::vector<std::string>)
 {
@@ -378,6 +417,52 @@ void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 		chan->broadcast(notify, -1);
 	}
 }
-void  privmsgCmd(Client, std::vector<std::string>)
+void  privmsgCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 411 " + caller.getNick() + " :No recipient given (PRIVMSG)\r\n");
+		return ;
+	}
+	if (args.size() < 3)
+	{
+		caller.sendMsg(":irc.server 412 " + caller.getNick() + " :No text to send\r\n");
+		return ;
+	}
+	std::string text = args[2];
+	if (!text.empty() && text[0] == ':')
+		text.erase(0, 1);
+	const std::string &target = args[1];
+	std::string msg = ":" + caller.getNick() + "!" + caller.getUser()
+		+ "@localhost PRIVMSG " + target + " :" + text + "\r\n";
+	if (!target.empty() && target[0] == '#')
+	{
+		Channel *chan = server.getChannel(target);
+		if (!chan)
+		{
+			caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + target + " :No such channel\r\n");
+			return ;
+		}
+		if (!chan->hasMember(caller.getSocketFd()))
+		{
+			caller.sendMsg(":irc.server 404 " + caller.getNick() + " " + target + " :Cannot send to channel\r\n");
+			return ;
+		}
+		chan->broadcast(msg, caller.getSocketFd());
+	}
+	else
+	{
+		Client *dest = server.getClientByNick(target);
+		if (!dest)
+		{
+			caller.sendMsg(":irc.server 401 " + caller.getNick() + " " + target + " :No such nick\r\n");
+			return ;
+		}
+		dest->sendMsg(msg);
+	}
 }
