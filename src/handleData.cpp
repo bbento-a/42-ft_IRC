@@ -9,6 +9,8 @@ void	userCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	quitCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	joinCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	partCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	topicCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	inviteCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	kickCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	modeCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	privmsgCmd(Client &caller, Server &server, std::vector<std::string> &args);
@@ -81,10 +83,10 @@ void	Server::handleData(Client &curClient)
 			partCmd(curClient, *this, processedBuf);
 			break;
 		case TOPIC:
-
+			topicCmd(curClient, *this, processedBuf);
 			break;
 		case INVITE:
-
+			inviteCmd(curClient, *this, processedBuf);
 			break;
 		case KICK:
 			kickCmd(curClient, *this, processedBuf);

@@ -262,11 +262,98 @@ void  partCmd(Client &caller, Server &server, std::vector<std::string> &args)
 		chan->removeMember(caller.getSocketFd());
 	}
 }
-void  topicCmd(Client, std::vector<std::string>)
+void  topicCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " TOPIC :Not enough parameters\r\n");
+		return ;
+	}
+	const std::string &chanName = args[1];
+	Channel *chan = server.getChannel(chanName);
+	if (!chan)
+	{
+		caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + chanName + " :No such channel\r\n");
+		return ;
+	}
+	if (!chan->hasMember(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + chanName + " :You're not on that channel\r\n");
+		return ;
+	}
+	// No topic argument: query current topic
+	if (args.size() == 2)
+	{
+		if (chan->getTopic().empty())
+			caller.sendMsg(":irc.server 331 " + caller.getNick() + " " + chanName + " :No topic is set\r\n");
+		else
+			caller.sendMsg(":irc.server 332 " + caller.getNick() + " " + chanName + " :" + chan->getTopic() + "\r\n");
+		return ;
+	}
+	// Setting topic: check +t lock
+	if (chan->isTopicLocked() && !chan->isOperator(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 482 " + caller.getNick() + " " + chanName + " :You're not channel operator\r\n");
+		return ;
+	}
+	std::string newTopic = args[2];
+	if (!newTopic.empty() && newTopic[0] == ':')
+		newTopic.erase(0, 1);
+	chan->setTopic(newTopic);
+	std::string notify = ":" + caller.getNick() + "!" + caller.getUser()
+		+ "@localhost TOPIC " + chanName + " :" + newTopic + "\r\n";
+	chan->broadcast(notify, -1);
 }
-void  inviteCmd(Client, std::vector<std::string>)
+void  inviteCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 3)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " INVITE :Not enough parameters\r\n");
+		return ;
+	}
+	const std::string &targetNick = args[1];
+	const std::string &chanName = args[2];
+	Channel *chan = server.getChannel(chanName);
+	if (!chan)
+	{
+		caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + chanName + " :No such channel\r\n");
+		return ;
+	}
+	if (!chan->hasMember(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + chanName + " :You're not on that channel\r\n");
+		return ;
+	}
+	if (chan->isInviteOnly() && !chan->isOperator(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 482 " + caller.getNick() + " " + chanName + " :You're not channel operator\r\n");
+		return ;
+	}
+	Client *target = server.getClientByNick(targetNick);
+	if (!target)
+	{
+		caller.sendMsg(":irc.server 401 " + caller.getNick() + " " + targetNick + " :No such nick\r\n");
+		return ;
+	}
+	if (chan->hasMember(target->getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 443 " + caller.getNick() + " " + targetNick + " " + chanName + " :is already on channel\r\n");
+		return ;
+	}
+	chan->addInvite(target->getSocketFd());
+	caller.sendMsg(":irc.server 341 " + caller.getNick() + " " + targetNick + " " + chanName + "\r\n");
+	target->sendMsg(":" + caller.getNick() + "!" + caller.getUser()
+		+ "@localhost INVITE " + targetNick + " " + chanName + "\r\n");
 }
 void  kickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
