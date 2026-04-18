@@ -50,6 +50,7 @@ class Channel
 
 	void	setTopic(const std::string &topic);
 	void	broadcast(const std::string &msg, int excludeFd = -1) const;
+	const 	std::map<int, Client *> &getMembers(void) const;
 
 	void	setInviteOnly(bool val);
 	void	setTopicLocked(bool val);

@@ -60,41 +60,170 @@ https://modern.ircdocs.horse/#connection-messages
   Parameters: <target>{,<target>} <text to be sent>
 */
 
-void  passCmd(Client, std::vector<std::string>)
+static void sendWelcome(Client &client)
 {
-   
+	const std::string &nick = client.getNick();
+	client.sendMsg(":irc.server 001 " + nick + " :Welcome to the IRC server " + nick + "!" + client.getUser() + "@localhost\r\n");
+	client.sendMsg(":irc.server 002 " + nick + " :Your host is irc.server, running version 1.0\r\n");
+	client.sendMsg(":irc.server 003 " + nick + " :This server was created today\r\n");
+	client.sendMsg(":irc.server 004 " + nick + " irc.server 1.0 o itkol\r\n");
 }
-void  nickCmd(Client, std::vector<std::string>)
-{
 
+void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	if (caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " PASS :Not enough parameters\r\n");
+		return ;
+	}
+	if (!server.checkPassword(args[1]))
+	{
+		caller.sendMsg(":irc.server 464 " + caller.getNick() + " :Password incorrect\r\n");
+		return ;
+	}
+	caller.setPassVerified(true);
 }
-void  userCmd(Client, std::vector<std::string>)
-{
 
+void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	if (args.size() < 2 || args[1].empty())
+	{
+		caller.sendMsg(":irc.server 431 " + caller.getNick() + " :No nickname given\r\n");
+		return ;
+	}
+	const std::string &newNick = args[1];
+	char first = newNick[0];
+	if (!std::isalpha(first) && first != '_' && first != '-')
+	{
+		caller.sendMsg(":irc.server 432 " + caller.getNick() + " " + newNick + " :Erroneous nickname\r\n");
+		return ;
+	}
+	if (server.isNickInUse(newNick) && newNick != caller.getNick())
+	{
+		caller.sendMsg(":irc.server 433 " + caller.getNick() + " " + newNick + " :Nickname is already in use\r\n");
+		return ;
+	}
+	caller.setNick(newNick);
+	if (caller.isRegistered())
+		sendWelcome(caller);
+}
+
+void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	(void)server;
+	if (caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " USER :Not enough parameters\r\n");
+		return ;
+	}
+	caller.setUser(args[1]);
+	if (caller.isRegistered())
+		sendWelcome(caller);
 }
 void  quitCmd(Client, std::vector<std::string>)
 {
-
 }
-void  joinCmd(Client, std::vector<std::string>)
+void  joinCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
-
+	if (!caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :You have not registered\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " JOIN :Not enough parameters\r\n");
+		return ;
+	}
+	// Parse comma-separated channel names and optional keys
+	std::vector<std::string> chanNames;
+	std::vector<std::string> keys;
+	{
+		std::istringstream ss(args[1]);
+		std::string tok;
+		while (std::getline(ss, tok, ','))
+			chanNames.push_back(tok);
+	}
+	if (args.size() >= 3)
+	{
+		std::istringstream ss(args[2]);
+		std::string tok;
+		while (std::getline(ss, tok, ','))
+			keys.push_back(tok);
+	}
+	for (size_t i = 0; i < chanNames.size(); i++)
+	{
+		const std::string &name = chanNames[i];
+		std::string key = (i < keys.size()) ? keys[i] : "";
+		if (name.empty() || name[0] != '#')
+		{
+			caller.sendMsg(":irc.server 403 " + caller.getNick() + " " + name + " :No such channel\r\n");
+			continue ;
+		}
+		Channel &chan = server.getOrCreateChannel(name);
+		if (chan.hasMember(caller.getSocketFd()))
+			continue ;
+		if (chan.isInviteOnly() && !chan.isInvited(caller.getSocketFd()))
+		{
+			caller.sendMsg(":irc.server 473 " + caller.getNick() + " " + name + " :Cannot join channel (+i)\r\n");
+			continue ;
+		}
+		if (chan.hasKey() && !chan.checkKey(key))
+		{
+			caller.sendMsg(":irc.server 475 " + caller.getNick() + " " + name + " :Cannot join channel (+k)\r\n");
+			continue ;
+		}
+		if (chan.isFull())
+		{
+			caller.sendMsg(":irc.server 471 " + caller.getNick() + " " + name + " :Cannot join channel (+l)\r\n");
+			continue ;
+		}
+		chan.addMember(&caller);
+		// First member in the channel becomes operator
+		if (chan.getMembers().size() == 1)
+			chan.addOperator(caller.getSocketFd());
+		// Notify everyone in the channel
+		std::string joinMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost JOIN " + name + "\r\n";
+		chan.broadcast(joinMsg, -1);
+		// Topic
+		if (chan.getTopic().empty())
+			caller.sendMsg(":irc.server 331 " + caller.getNick() + " " + name + " :No topic is set\r\n");
+		else
+			caller.sendMsg(":irc.server 332 " + caller.getNick() + " " + name + " :" + chan.getTopic() + "\r\n");
+		// Names list
+		std::string namesList;
+		const std::map<int, Client *> &members = chan.getMembers();
+		for (std::map<int, Client *>::const_iterator it = members.begin(); it != members.end(); ++it)
+		{
+			if (!namesList.empty()) namesList += " ";
+			if (chan.isOperator(it->first)) namesList += "@";
+			namesList += it->second->getNick();
+		}
+		caller.sendMsg(":irc.server 353 " + caller.getNick() + " = " + name + " :" + namesList + "\r\n");
+		caller.sendMsg(":irc.server 366 " + caller.getNick() + " " + name + " :End of /NAMES list\r\n");
+	}
 }
 void  partCmd(Client, std::vector<std::string>)
 {
-
 }
 void  topicCmd(Client, std::vector<std::string>)
 {
-
 }
 void  inviteCmd(Client, std::vector<std::string>)
 {
-
 }
 void  kickCmd(Client, std::vector<std::string>)
 {
-
 }
 void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
@@ -251,5 +380,4 @@ void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 }
 void  privmsgCmd(Client, std::vector<std::string>)
 {
-
 }

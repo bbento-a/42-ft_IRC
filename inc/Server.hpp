@@ -48,11 +48,14 @@ class Server
 	void	runtime(void); //loop of connections
 	void	registerClient(void); //check client infos to link them to the sv
 	void    unregisterClient(pollfdIter clientInfo);
-	void    handleClientData(Client clientInfo);
-	void	handleData(Client curClient);
+	void    handleClientData(Client &clientInfo);
+	void	handleData(Client &curClient);
 
 	Channel	*getChannel(const std::string &name);
+	Channel	&getOrCreateChannel(const std::string &name);
 	Client	*getClientByNick(const std::string &nick);
+	bool	checkPassword(const std::string &pass) const;
+	bool    isNickInUse(const std::string &nick) const;
 
 	class	InvalidPortNumber : public std::exception
 	{ public: const char *what() const throw();	};

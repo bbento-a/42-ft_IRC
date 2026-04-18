@@ -183,3 +183,10 @@ bool	Channel::isFull(void) const
 {
 	return _hasLimit && (int)_members.size() >= _limit;
 }
+
+// Returns a const reference to the map of members (fd -> Client*).
+// Used by JOIN to build PRL_NAMREPLY
+const std::map<int, Client *> &Channel::getMembers(void) const
+{
+	return _members;
+}

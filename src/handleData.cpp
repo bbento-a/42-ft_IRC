@@ -2,7 +2,11 @@
 
 #include <sstream>
 
-// Forward declaration - defined in commands.cpp
+// Forward declarations - defined in commands.cpp
+void	passCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	nickCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	userCmd(Client &caller, Server &server, std::vector<std::string> &args);
+void	joinCmd(Client &caller, Server &server, std::vector<std::string> &args);
 void	modeCmd(Client &caller, Server &server, std::vector<std::string> &args);
 
 // Maps a raw command string to the cmdsKeyword enum. Returns -1 if unknown.
@@ -22,7 +26,7 @@ static int	parseCmd(const std::string &cmd)
 	return -1;
 }
 
-void	Server::handleData(Client curClient)
+void	Server::handleData(Client &curClient)
 {
 	// Parse data received from message	
 	std::vector<std::string>   processedBuf;
@@ -31,32 +35,43 @@ void	Server::handleData(Client curClient)
 	curClient.setBuffer("");
 	while(std::getline(procStream, curToken, ' '))
 	{
-		if (curToken[0] == ':')
+		if (!curToken.empty() && curToken[0] == ':')
 		{
 			std::string tmp;
 			std::getline(procStream, tmp);
 			curToken += tmp;
 		}
-		processedBuf.push_back(curToken);
+		if (!curToken.empty())
+			processedBuf.push_back(curToken);
 	}
+	// Case 1: recv gave us nothing at all - vector is empty from the start
 	if (processedBuf.empty())
 		return ; // Might need to handle in a different way
+	// Strip trailing \r\n from the last token (raw recv data)
+	std::string &last = processedBuf.back();
+	while(!last.empty() && (last[last.size() - 1] == '\n' || last[last.size() - 1] == '\r'))
+		last.erase(last.size() - 1);
+	if (last.empty())
+		processedBuf.pop_back();
+	// Case 2: vector had exactly one token which was only "\r\n" - now empty after pop :))
+	if (processedBuf.empty())
+		return ;
 	switch (parseCmd(processedBuf[0]))
 	{
 		case PASS:
-		
+			passCmd(curClient, *this, processedBuf);
         	break;
 		case NICK:
-
+			nickCmd(curClient, *this, processedBuf);
 			break;
 		case USER:
-
+			userCmd(curClient, *this, processedBuf);
 			break;
 		case QUIT:
 
 			break;
 		case JOIN:
-
+			joinCmd(curClient, *this, processedBuf);
 			break;
 		case PART:
 

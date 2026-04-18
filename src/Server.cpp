@@ -136,6 +136,15 @@ Channel	*Server::getChannel(const std::string &name)
 	return &it->second;
 }
 
+// Returns a reference to the channel, creating it if it does not exist.
+Channel	&Server::getOrCreateChannel(const std::string &name)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	if (it == _channels.end())
+		it = _channels.insert(std::make_pair(name, Channel(name))).first;
+	return it->second;
+}
+
 // Returns a pointer to the connected client with the given nick, or NULL.
 Client	*Server::getClientByNick(const std::string &nick)
 {
@@ -145,4 +154,21 @@ Client	*Server::getClientByNick(const std::string &nick)
 			return &it->second;
 	}
 	return NULL;
+}
+
+// Returns true if the given password matches the server password.
+bool	Server::checkPassword(const std::string &pass) const
+{
+	return pass == _password;
+}
+
+// Returns true if the nick is already taken by a connected client.
+bool	Server::isNickInUse(const std::string &nick) const
+{
+	for (std::map<int, Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second.getNick() == nick)
+			return true;
+	}
+	return false;
 }
