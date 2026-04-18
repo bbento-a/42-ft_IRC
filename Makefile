@@ -22,8 +22,9 @@ SRC_FILES	=	\
 				Channel.cpp \
 				handleData.cpp \
 				commands.cpp \
+				channelCmds.cpp \
 				errorMsgs/ServerMsgs.cpp
-				
+			
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRC_FILES))
 
