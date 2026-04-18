@@ -69,13 +69,16 @@ void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
 
 void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	char	first;
+	
 	if (args.size() < 2 || args[1].empty())
 	{
 		caller.sendMsg(":irc.server 431 " + caller.getNick() + " :No nickname given\r\n");
 		return ;
 	}
 	const std::string &newNick = args[1];
-	char first = newNick[0];
+
+	first = newNick[0];
 	if (!std::isalpha(first) && first != '_' && first != '-')
 	{
 		caller.sendMsg(":irc.server 432 " + caller.getNick() + " " + newNick + " :Erroneous nickname\r\n");

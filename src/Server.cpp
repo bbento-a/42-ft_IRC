@@ -135,7 +135,9 @@ void	Server::runtime()
 // Returns a pointer to the channel with the given name, or NULL if not found.
 Channel	*Server::getChannel(const std::string &name)
 {
-	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	std::map<std::string, Channel>::iterator	it;
+
+	it = _channels.find(name);
 	if (it == _channels.end())
 		return NULL;
 	return &it->second;
@@ -144,7 +146,9 @@ Channel	*Server::getChannel(const std::string &name)
 // Returns a reference to the channel, creating it if it does not exist.
 Channel	&Server::getOrCreateChannel(const std::string &name)
 {
-	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	std::map<std::string, Channel>::iterator	it;
+
+	it = _channels.find(name);
 	if (it == _channels.end())
 		it = _channels.insert(std::make_pair(name, Channel(name))).first;
 	return it->second;
@@ -164,7 +168,7 @@ Client	*Server::getClientByNick(const std::string &nick)
 // Returns true if the given password matches the server password.
 bool	Server::checkPassword(const std::string &pass) const
 {
-	return pass == _password;
+	return (pass == _password);
 }
 
 // Returns true if the nick is already taken by a connected client.
@@ -173,9 +177,9 @@ bool	Server::isNickInUse(const std::string &nick) const
 	for (std::map<int, Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		if (it->second.getNick() == nick)
-			return true;
+			return (true);
 	}
-	return false;
+	return (false);
 }
 
 // Broadcasts quitMsg to every channel the client is in, then removes them.
