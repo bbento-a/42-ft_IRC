@@ -2,9 +2,9 @@
 
 // Initialises a channel with its name. All MODE flags start off.
 Channel::Channel(const std::string &name)
-	: _name(name), _topic(""), _key(""),
-	  _inviteOnly(false), _topicLocked(false), _hasKey(false),
-	  _limit(0), _hasLimit(false)
+	: _name(name), _topic(""),
+	  _inviteOnly(false), _topicLocked(false), _hasKey(false), _key(""),
+	  _hasLimit(false), _limit(0)
 {}
 
 // Returns the channel name (e.g. "#general").
