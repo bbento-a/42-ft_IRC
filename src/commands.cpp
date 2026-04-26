@@ -38,7 +38,7 @@ https://modern.ircdocs.horse/#connection-messages
 static void sendWelcome(Client &client)
 {
 	const std::string &nick = client.getNick();
-	client.sendMsg(":irc.server 001 " + nick + " :Welcome to the IRC server " + nick + "!" + client.getUser() + "@localhost\r\n");
+	client.sendMsg(":irc.server 001 " + nick + " :Welcome to the IRC server " + nick + "!" + client.getUser() + "@" + client.getHost() + "\r\n");
 	client.sendMsg(":irc.server 002 " + nick + " :Your host is irc.server, running version 1.0\r\n");
 	client.sendMsg(":irc.server 003 " + nick + " :This server was created today\r\n");
 	client.sendMsg(":irc.server 004 " + nick + " irc.server 1.0 o itkol\r\n");
@@ -124,7 +124,7 @@ void  quitCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	std::string reason = (args.size() >= 2) ? args[1] : "Client quit";
 	if (!reason.empty() && reason[0] == ':')
 		reason.erase(0, 1);
-	std::string quitMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost QUIT :" + reason + "\r\n";
+	std::string quitMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " QUIT :" + reason + "\r\n";
 	server.removeFromAllChannels(caller.getSocketFd(), quitMsg);
 	caller.sendMsg("ERROR :Closing connection\r\n");
 	caller.setWantsQuit(true);

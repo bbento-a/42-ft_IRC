@@ -12,6 +12,7 @@ class Client
 	std::string	nick;
 	std::string	user;
 	std::string	realname;
+	std::string	host;
 	bool		passVerified;
 	bool		nickSet;
 	bool		userSet;
@@ -34,6 +35,9 @@ class Client
 
 	void		setRealname(const std::string &r);
 	std::string	getRealname(void) const;
+
+	void		setHost(const std::string &h);
+	std::string	getHost(void) const;
 
 	void		setPassVerified(bool val);
 	bool		isPassVerified(void) const;

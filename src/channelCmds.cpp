@@ -89,7 +89,7 @@ static void joinOne(Client &caller, Server &server, const std::string &name, con
 	if (chan.getMembers().size() == 1)  // first member becomes operator
 		chan.addOperator(caller.getSocketFd());
 	// Notify everyone in the channel, then send topic + names to the joiner
-	chan.broadcast(":" + caller.getNick() + "!" + caller.getUser() + "@localhost JOIN " + name + "\r\n", -1);
+	chan.broadcast(":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " JOIN " + name + "\r\n", -1);
 	sendJoinReplies(chan, caller, name);
 }
 
@@ -139,7 +139,7 @@ static void partOne(Client &caller, Server &server, const std::string &name, con
 		return ;
 	}
 	// Broadcast before removing so the departing client also receives the message
-	std::string partMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost PART " + name + " :" + reason + "\r\n";
+	std::string partMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " PART " + name + " :" + reason + "\r\n";
 	chan->broadcast(partMsg, -1);
 	chan->removeMember(caller.getSocketFd());
 }
@@ -185,7 +185,7 @@ static void topicSet(Channel *chan, Client &caller, const std::string &chanName,
 	if (!newTopic.empty() && newTopic[0] == ':')  // strip leading IRC colon
 		newTopic.erase(0, 1);
 	chan->setTopic(newTopic);
-	std::string notify = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost TOPIC " + chanName + " :" + newTopic + "\r\n";
+	std::string notify = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " TOPIC " + chanName + " :" + newTopic + "\r\n";
 	chan->broadcast(notify, -1);
 }
 
@@ -249,7 +249,7 @@ static void sendInviteToTarget(Channel *chan, Client &caller, Server &server,
 	// Record the invite, send 341 to the inviter, and notify the target
 	chan->addInvite(target->getSocketFd());
 	caller.sendMsg(":irc.server 341 " + caller.getNick() + " " + targetNick + " " + chanName + "\r\n");
-	target->sendMsg(":" + caller.getNick() + "!" + caller.getUser() + "@localhost INVITE " + targetNick + " " + chanName + "\r\n");
+	target->sendMsg(":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " INVITE " + targetNick + " " + chanName + "\r\n");
 }
 
 void  inviteCmd(Client &caller, Server &server, std::vector<std::string> &args)
@@ -303,7 +303,7 @@ static void kickTarget(Channel *chan, Client &caller, Server &server,
 		return ;
 	}
 	// Broadcast before removing so the kicked client also receives the message
-	std::string kickMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
+	std::string kickMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
 	chan->broadcast(kickMsg, -1);
 	chan->removeMember(target->getSocketFd());
 }
@@ -622,7 +622,7 @@ void  privmsgCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	if (!text.empty() && text[0] == ':')  // strip leading IRC colon from trailing parameter
 		text.erase(0, 1);
 	const std::string &target = args[1];
-	std::string msg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
+	std::string msg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " PRIVMSG " + target + " :" + text + "\r\n";
 	if (!target.empty() && target[0] == '#')  // channel message
 		privmsgToChannel(caller, server, target, msg);
 	else  // direct nick message

@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 
 Client::Client(int fd)
-	: socketFd(fd), buffer(""), nick(""), user(""), realname(""),
+	: socketFd(fd), buffer(""), nick(""), user(""), realname(""), host(""),
 	  passVerified(false), nickSet(false), userSet(false), _wantsQuit(false)
 {}
 
@@ -51,6 +51,16 @@ void	Client::setRealname(const std::string &r)
 std::string	Client::getRealname(void) const
 {
 	return realname;
+}
+
+void	Client::setHost(const std::string &h)
+{
+	host = h;
+}
+
+std::string	Client::getHost(void) const
+{
+	return host;
 }
 
 void	Client::setPassVerified(bool val)
