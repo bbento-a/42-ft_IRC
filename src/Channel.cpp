@@ -2,54 +2,55 @@
 
 // Initialises a channel with its name. All MODE flags start off.
 Channel::Channel(const std::string &name)
-	: _name(name), _topic(""), _key(""),
-	  _inviteOnly(false), _topicLocked(false), _hasKey(false)
+	: _name(name), _topic(""),
+	  _inviteOnly(false), _topicLocked(false), _hasKey(false), _key(""),
+	  _hasLimit(false), _limit(0)
 {}
 
 // Returns the channel name (e.g. "#general").
 std::string	Channel::getName(void) const
 {
-	return _name;
+	return (_name);
 }
 
 // Returns the current topic. Empty string means no topic is set.
 std::string	Channel::getTopic(void) const
 {
-	return _topic;
+	return (_topic);
 }
 
 // Returns true if the client with this fd is in the channel.
 bool	Channel::hasMember(int fd) const
 {
-	return _members.count(fd) > 0;
+	return (_members.count(fd) > 0);
 }
 
 // Returns true if the client with this fd has operator privileges.
 // Used to gate KICK, INVITE, TOPIC (when +t), and MODE.
 bool	Channel::isOperator(int fd) const
 {
-	return _operators.count(fd) > 0;
+	return (_operators.count(fd) > 0);
 }
 
 // Returns true if the client with this fd has been invited.
 // Checked on JOIN when the channel is invite-only (+i).
 bool	Channel::isInvited(int fd) const
 {
-	return _invited.count(fd) > 0;
+	return (_invited.count(fd) > 0);
 }
 
 // Returns true if the channel is invite-only (MODE +i).
 // JOIN must reject clients that are not in _invited when this is true.
 bool	Channel::isInviteOnly(void) const
 {
-	return _inviteOnly;
+	return (_inviteOnly);
 }
 
 // Returns true if only operators can change the topic (MODE +t).
 // TOPIC must check this before allowing a regular user to set a new topic.
 bool	Channel::isTopicLocked(void) const
 {
-	return _topicLocked;
+	return (_topicLocked);
 }
 
 // Returns true if the channel has a key set and the provided key matches.
@@ -57,6 +58,18 @@ bool	Channel::isTopicLocked(void) const
 bool	Channel::checkKey(const std::string &key) const
 {
 	return (_hasKey && _key == key);
+}
+
+// Returns the channel key (empty string if none). Used in RPL_CHANNELMODEIS.
+std::string	Channel::getKey(void) const
+{
+	return (_key);
+}
+
+// Returns true if a key is currently set (+k active).
+bool	Channel::hasKey(void) const
+{
+	return (_hasKey);
 }
 
 // Adds a client to the channel's member list, keyed by their socket fd.
@@ -136,4 +149,44 @@ void	Channel::clearKey(void)
 {
 	_key = "";
 	_hasKey = false;
+}
+
+// Sets the user limit and activates the +l flag (MODE +l <limit>).
+void	Channel::setLimit(int limit)
+{
+	_limit = limit;
+	_hasLimit = true;
+}
+
+// Removes the user limit and deactivates the +l flag (MODE -l).
+void	Channel::clearLimit(void)
+{
+	_limit = 0;
+	_hasLimit = false;
+}
+
+// Returns the current user limit. Meaningful only when hasLimit() is true.
+int	Channel::getLimit(void) const
+{
+	return (_limit);
+}
+
+// Returns true if a user limit is currently set (+l active).
+bool	Channel::hasLimit(void) const
+{
+	return (_hasLimit);
+}
+
+// Returns true if the channel is full (member count >= limit).
+// JOIN should call this when hasLimit() is true.
+bool	Channel::isFull(void) const
+{
+	return (_hasLimit && (int)_members.size() >= _limit);
+}
+
+// Returns a const reference to the map of members (fd -> Client*).
+// Used by JOIN to build PRL_NAMREPLY
+const std::map<int, Client *> &Channel::getMembers(void) const
+{
+	return (_members);
 }

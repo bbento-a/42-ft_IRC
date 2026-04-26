@@ -1,4 +1,6 @@
 #include "../inc/Server.hpp"
+#include <sstream>
+#include <cstdlib>
 /* 
 my source for cmds: 
 https://modern.ircdocs.horse/#connection-messages
@@ -31,74 +33,99 @@ https://modern.ircdocs.horse/#connection-messages
    Parameters: [<reason>]
   Errors:
    None
-
-
-      Command: JOIN
-  Parameters: <channel>{,<channel>} [<key>{,<key>}]
-  Alt Params: 0
-
-       Command: PART
-  Parameters: <channel>{,<channel>} [<reason>]
-
-     Command: TOPIC
-  Parameters: <channel> [<topic>]
-
-     Command: INVITE
-  Parameters: <nickname> <channel>
-
-      Command: KICK
-   Parameters: <channel> <user> *( "," <user> ) [<comment>]
-
-     Command: MODE
-  Parameters: <target> [<modestring> [<mode arguments>...]]
-
-
-
-       Command: PRIVMSG
-  Parameters: <target>{,<target>} <text to be sent>
 */
 
-void  passCmd(Client client, std::vector<std::string> args)
+static void sendWelcome(Client &client)
 {
-   
+	const std::string &nick = client.getNick();
+	client.sendMsg(":irc.server 001 " + nick + " :Welcome to the IRC server " + nick + "!" + client.getUser() + "@localhost\r\n");
+	client.sendMsg(":irc.server 002 " + nick + " :Your host is irc.server, running version 1.0\r\n");
+	client.sendMsg(":irc.server 003 " + nick + " :This server was created today\r\n");
+	client.sendMsg(":irc.server 004 " + nick + " irc.server 1.0 o itkol\r\n");
 }
-void  nickCmd(Client client, std::vector<std::string> args)
-{
+// ── PASS ─────────────────────────────────────────────────────────────────────
 
+void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	if (caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
+		return ;
+	}
+	if (args.size() < 2)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " PASS :Not enough parameters\r\n");
+		return ;
+	}
+	if (!server.checkPassword(args[1]))
+	{
+		caller.sendMsg(":irc.server 464 " + caller.getNick() + " :Password incorrect\r\n");
+		return ;
+	}
+	caller.setPassVerified(true);
 }
-void  userCmd(Client client, std::vector<std::string> args)
-{
 
+// ── NICK ─────────────────────────────────────────────────────────────────────
+
+void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	char	first;
+	
+	if (args.size() < 2 || args[1].empty())
+	{
+		caller.sendMsg(":irc.server 431 " + caller.getNick() + " :No nickname given\r\n");
+		return ;
+	}
+	const std::string &newNick = args[1];
+
+	first = newNick[0];
+	if (!std::isalpha(first) && first != '_' && first != '-')
+	{
+		caller.sendMsg(":irc.server 432 " + caller.getNick() + " " + newNick + " :Erroneous nickname\r\n");
+		return ;
+	}
+	if (server.isNickInUse(newNick) && newNick != caller.getNick())
+	{
+		caller.sendMsg(":irc.server 433 " + caller.getNick() + " " + newNick + " :Nickname is already in use\r\n");
+		return ;
+	}
+	caller.setNick(newNick);
+	if (caller.isRegistered())
+		sendWelcome(caller);
 }
-void  quitCmd(Client client, std::vector<std::string> args)
-{
+// ── USER ─────────────────────────────────────────────────────────────────────
 
+void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
+{
+	(void)server;
+	if (caller.isRegistered())
+	{
+		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
+		return ;
+	}
+	if (args.size() < 5)
+	{
+		caller.sendMsg(":irc.server 461 " + caller.getNick() + " USER :Not enough parameters\r\n");
+		return ;
+	}
+	caller.setUser(args[1]);
+	std::string rname = args[4];
+	if (!rname.empty() && rname[0] == ':')
+		rname.erase(0, 1);
+	caller.setRealname(rname);
+	if (caller.isRegistered())
+		sendWelcome(caller);
 }
-void  joinCmd(Client client, std::vector<std::string> args)
-{
 
-}
-void  partCmd(Client client, std::vector<std::string> args)
-{
+// ── QUIT ─────────────────────────────────────────────────────────────────────
 
-}
-void  topicCmd(Client client, std::vector<std::string> args)
+void  quitCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
-
-}
-void  inviteCmd(Client client, std::vector<std::string> args)
-{
-
-}
-void  kickCmd(Client client, std::vector<std::string> args)
-{
-
-}
-void  modeCmd(Client client, std::vector<std::string> args)
-{
-
-}
-void  privmsgCmd(Client client, std::vector<std::string> args)
-{
-
+	std::string reason = (args.size() >= 2) ? args[1] : "Client quit";
+	if (!reason.empty() && reason[0] == ':')
+		reason.erase(0, 1);
+	std::string quitMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@localhost QUIT :" + reason + "\r\n";
+	server.removeFromAllChannels(caller.getSocketFd(), quitMsg);
+	caller.sendMsg("ERROR :Closing connection\r\n");
+	caller.setWantsQuit(true);
 }

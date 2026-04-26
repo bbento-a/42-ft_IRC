@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -45,6 +46,7 @@ void    Server::registerClient(void)
 void    Server::unregisterClient(pollfdIter clientInfo)
 {
     //erase client from individual channels
+    close(clientInfo->fd);
     this->_clients.erase(clientInfo->fd);
     this->_clientsPoll.erase(clientInfo);
 	this->_nbConnected--;
@@ -103,15 +105,16 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 } */
 
 
-void    Server::handleClientData(Client clientInfo)
+void    Server::handleClientData(Client &clientInfo)
 {
     // Make a buffer to store information from a client
     char buf[100];
     int  retCode = -1;
-    retCode = recv(clientInfo.getSocketFd(), &buf, 100, 0);
+    retCode = recv(clientInfo.getSocketFd(), buf, sizeof(buf) -1, 0);
     if (retCode == 0)
     {
         //unregister client
+        return ;
     }
 
     //  Store that information in a container
@@ -121,14 +124,8 @@ void    Server::handleClientData(Client clientInfo)
         throw ;//FailedtoReceiveMsg
     else
     {
-       //  (Testing server setup)
-        for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
-        {
-            if (it->fd == this->_svEndpoint) // if I send it to the listening socket it will SIGPIPE
-                continue ;
-            retCode = send((*it).fd, buf, retCode, 0);
-            if (retCode <= -1)
-                throw 'i'; //FailedtoSendMsg
-        }
+        buf[retCode] = '\0';
+        clientInfo.setBuffer(std::string(buf, retCode));
+        handleData(clientInfo);
     }
 }
