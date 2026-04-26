@@ -1,6 +1,7 @@
 #include "../inc/Server.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
@@ -34,6 +35,7 @@ void    Server::registerClient(void)
 	newClientPoll.revents = 0;
 
     Client newClient(fd);
+    newClient.setHost(inet_ntoa(sockSettings.sin_addr));
     this->_clients.insert(std::make_pair(fd, newClient));
     this->_clientsPoll.push_back(newClientPoll);
 	this->_nbConnected++;
