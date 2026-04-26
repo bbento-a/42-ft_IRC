@@ -103,12 +103,16 @@ void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
 		return ;
 	}
-	if (args.size() < 2)
+	if (args.size() < 5)
 	{
 		caller.sendMsg(":irc.server 461 " + caller.getNick() + " USER :Not enough parameters\r\n");
 		return ;
 	}
 	caller.setUser(args[1]);
+	std::string rname = args[4];
+	if (!rname.empty() && rname[0] == ':')
+		rname.erase(0, 1);
+	caller.setRealname(rname);
 	if (caller.isRegistered())
 		sendWelcome(caller);
 }

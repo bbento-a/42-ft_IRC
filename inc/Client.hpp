@@ -11,6 +11,7 @@ class Client
 	std::string	buffer;
 	std::string	nick;
 	std::string	user;
+	std::string	realname;
 	bool		passVerified;
 	bool		nickSet;
 	bool		userSet;
@@ -30,6 +31,9 @@ class Client
 
 	void		setUser(const std::string &u);
 	std::string	getUser(void) const;
+
+	void		setRealname(const std::string &r);
+	std::string	getRealname(void) const;
 
 	void		setPassVerified(bool val);
 	bool		isPassVerified(void) const;
