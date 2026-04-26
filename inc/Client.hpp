@@ -45,6 +45,7 @@ class Client
 	void		setWantsQuit(bool val);
 	bool		wantsQuit(void) const;
 
+	bool		isUserSet(void) const;
 	bool		isRegistered(void) const;
 
 	void		sendMsg(const std::string &msg) const;

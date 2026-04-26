@@ -83,6 +83,11 @@ bool	Client::wantsQuit(void) const
 	return _wantsQuit;
 }
 
+bool	Client::isUserSet(void) const
+{
+	return userSet;
+}
+
 // A client is fully registered once PASS was validated, NICK and USER were received.
 bool	Client::isRegistered(void) const
 {

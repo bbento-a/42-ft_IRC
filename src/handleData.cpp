@@ -33,78 +33,83 @@ static int	parseCmd(const std::string &cmd)
 
 void	Server::handleData(Client &curClient)
 {
-	// Parse data received from message
-	std::vector<std::string>   processedBuf;
-	std::stringstream          procStream(curClient.getBuffer());
-	std::string                curToken;
+	std::string	buffer = curClient.getBuffer();
 	curClient.setBuffer("");
 
-	while(std::getline(procStream, curToken, ' '))
+	std::stringstream	bufStream(buffer);
+	std::string			line;
+
+	while (std::getline(bufStream, line))
 	{
-		if (!curToken.empty() && curToken[0] == ':')
+		// Parse data received from message
+		std::vector<std::string>	processedBuf;
+		std::stringstream			procStream(line);
+		std::string					curToken;
+
+		while (std::getline(procStream, curToken, ' '))
 		{
-			std::string tmp;
-			std::getline(procStream, tmp);
-			curToken += tmp;
+			if (!curToken.empty() && curToken[0] == ':')
+			{
+				std::string tmp;
+				std::getline(procStream, tmp);
+				curToken += tmp;
+			}
+			if (!curToken.empty())
+				processedBuf.push_back(curToken);
 		}
-		if (!curToken.empty())
-			processedBuf.push_back(curToken);
+
+		if (processedBuf.empty())
+			continue;
+		// Strip trailing \r from the last token
+		std::string &last = processedBuf.back();
+		while (!last.empty() && (last[last.size() - 1] == '\n' || last[last.size() - 1] == '\r'))
+			last.erase(last.size() - 1);
+		if (last.empty())
+			processedBuf.pop_back();
+		if (processedBuf.empty())
+			continue;
+
+		for (size_t i = 0; i < processedBuf.size(); i++)
+			std::cout << processedBuf[i];
+		std::cout << '\n';
+
+		switch (parseCmd(processedBuf[0]))
+		{
+			case PASS:
+				passCmd(curClient, *this, processedBuf);
+				break;
+			case NICK:
+				nickCmd(curClient, *this, processedBuf);
+				break;
+			case USER:
+				userCmd(curClient, *this, processedBuf);
+				break;
+			case QUIT:
+				quitCmd(curClient, *this, processedBuf);
+				break;
+			case JOIN:
+				joinCmd(curClient, *this, processedBuf);
+				break;
+			case PART:
+				partCmd(curClient, *this, processedBuf);
+				break;
+			case TOPIC:
+				topicCmd(curClient, *this, processedBuf);
+				break;
+			case INVITE:
+				inviteCmd(curClient, *this, processedBuf);
+				break;
+			case KICK:
+				kickCmd(curClient, *this, processedBuf);
+				break;
+			case MODE:
+				modeCmd(curClient, *this, processedBuf);
+				break;
+			case PRIVMSG:
+				privmsgCmd(curClient, *this, processedBuf);
+				break;
+			default:
+				break;
+		}
 	}
-
-	// Case 1: recv gave us nothing at all - vector is empty from the start
-	if (processedBuf.empty())
-		return ; // Might need to handle in a different way
-	// Strip trailing \r\n from the last token (raw recv data)
-	std::string &last = processedBuf.back();
-	while(!last.empty() && (last[last.size() - 1] == '\n'))
-		last.erase(last.size() - 1);
-	if (last.empty())
-		processedBuf.pop_back();
-	// Case 2: vector had exactly one token which was only "\r\n" - now empty after pop :))
-	if (processedBuf.empty())
-		return ;
-
-	switch (parseCmd(processedBuf[0]))
-	{
-		case PASS:
-			passCmd(curClient, *this, processedBuf);
-        	break;
-		case NICK:
-			nickCmd(curClient, *this, processedBuf);
-			break;
-		case USER:
-			userCmd(curClient, *this, processedBuf);
-			break;
-		case QUIT:
-			quitCmd(curClient, *this, processedBuf);
-			break;
-		case JOIN:
-			joinCmd(curClient, *this, processedBuf);
-			break;
-		case PART:
-			partCmd(curClient, *this, processedBuf);
-			break;
-		case TOPIC:
-			topicCmd(curClient, *this, processedBuf);
-			break;
-		case INVITE:
-			inviteCmd(curClient, *this, processedBuf);
-			break;
-		case KICK:
-			kickCmd(curClient, *this, processedBuf);
-			break;
-		case MODE:
-			modeCmd(curClient, *this, processedBuf);
-			break;
-		case PRIVMSG:
-			privmsgCmd(curClient, *this, processedBuf);
-			break;
-      
-      default:
-	  	// invalid token
-			break;
-   }
-   // Send that info to "corresponded place" in sv (send to commands)
-	// Send corresponding success/error message according to IRC syntax of logs
-
 }

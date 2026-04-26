@@ -98,7 +98,7 @@ void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	(void)server;
-	if (caller.isRegistered())
+	if (caller.isUserSet())
 	{
 		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
 		return ;
