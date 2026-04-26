@@ -1,6 +1,7 @@
 #include "../inc/Server.hpp"
 
 #include <sstream>
+#include <iostream>
 
 // Maps a raw command string to the cmdsKeyword enum. Returns -1 if unknown.
 static int	parseCmd(const std::string &cmd)
@@ -32,11 +33,12 @@ static int	parseCmd(const std::string &cmd)
 
 void	Server::handleData(Client &curClient)
 {
-	// Parse data received from message	
+	// Parse data received from message
 	std::vector<std::string>   processedBuf;
 	std::stringstream          procStream(curClient.getBuffer());
 	std::string                curToken;
 	curClient.setBuffer("");
+
 	while(std::getline(procStream, curToken, ' '))
 	{
 		if (!curToken.empty() && curToken[0] == ':')
@@ -48,18 +50,20 @@ void	Server::handleData(Client &curClient)
 		if (!curToken.empty())
 			processedBuf.push_back(curToken);
 	}
+
 	// Case 1: recv gave us nothing at all - vector is empty from the start
 	if (processedBuf.empty())
 		return ; // Might need to handle in a different way
 	// Strip trailing \r\n from the last token (raw recv data)
 	std::string &last = processedBuf.back();
-	while(!last.empty() && (last[last.size() - 1] == '\n' || last[last.size() - 1] == '\r'))
+	while(!last.empty() && (last[last.size() - 1] == '\n'))
 		last.erase(last.size() - 1);
 	if (last.empty())
 		processedBuf.pop_back();
 	// Case 2: vector had exactly one token which was only "\r\n" - now empty after pop :))
 	if (processedBuf.empty())
 		return ;
+
 	switch (parseCmd(processedBuf[0]))
 	{
 		case PASS:

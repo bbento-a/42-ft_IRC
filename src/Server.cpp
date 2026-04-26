@@ -114,7 +114,7 @@ void	Server::runtime()
 				}
 				else if (cEvent & POLLIN) // new read input data
 				{
-					handleClientData(_clients.at(cFd));
+					handleClientData(_clientsPoll.begin() + i);
 					if (_clients.count(cFd) && _clients.at(cFd).wantsQuit())
 					{
 						unregisterClient(_clientsPoll.begin() + i);

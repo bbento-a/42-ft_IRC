@@ -55,7 +55,7 @@ class Server
 	// Client management
 	void  registerClient(void);
 	void  unregisterClient(pollfdIter clientInfo);
-	void  handleClientData(Client &clientInfo);
+	void  handleClientData(pollfdIter it);
 	void  handleData(Client &curClient);
 
 	// Queries

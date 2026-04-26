@@ -24,10 +24,7 @@ void    Server::registerClient(void)
 
     fd = accept(this->_svEndpoint, reinterpret_cast<sockaddr *>(&sockSettings), &settingsLen);
     if (fd == -1)
-    {   
-		std::cerr << std::strerror(errno) << '\n';
-            throw 'g'; //FailedtoCreateClientSocket
-    }
+        throw 'g'; //FailedtoCreateClientSocket
     if (fcntl(fd, F_SETFL, O_NONBLOCK) <= -1)
         throw 'h'; // FailedtoTurnSocketNonBlocking
     newClientPoll.fd = fd;
@@ -48,6 +45,7 @@ void    Server::registerClient(void)
 void    Server::unregisterClient(pollfdIter clientInfo)
 {
     //erase client from individual channels
+	std::cout << "Disconnected user"<< '\n';
     close(clientInfo->fd);
     this->_clients.erase(clientInfo->fd);
     this->_clientsPoll.erase(clientInfo);
@@ -58,27 +56,27 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 // Make buffer to read and store info
 // Send received data for corresponded place
 
-/* void    Server::handleClientData(Client clientInfo)
+void    Server::handleClientData(pollfdIter it)
 {
+    Client *clientInfo = &_clients.at(it->fd);
     // Make a buffer to store information from a client
     // Store that information
-    char    buf[512];
-    int     retCode = -1;
-    for (retCode = recv(clientInfo.getSocketFd(), &buf, 512, 0); retCode >= 0;)
-    {
-        if (retCode == 0 && clientInfo.getBuffer().empty()) // if the program receives an EOF without any message to be sent (close connection)
-            break ;
-        std::string tmp = clientInfo.getBuffer();
-        tmp += buf;
-        clientInfo.setBuffer(tmp);
-    }
+    char    buf[513];
+    int     retCode = 513;
+
+    std::memset(buf, '\0', retCode);
+    retCode = recv(clientInfo->getSocketFd(), &buf, 512, 0);
+
     if (retCode <= -1)
-        throw ; //FailedtoReceiveMsg
-    else if (retCode == 0 && clientInfo.getBuffer().empty())
-    {
-        //unregister client
-    }
-    else if (*(clientInfo.getBuffer().end()--) != '\n')
+        return ;
+    else if (retCode == 0) // if the program doesn't have any bytes from the client, we want to close the connection
+        unregisterClient(it);
+
+    std::string tmp = clientInfo->getBuffer();
+    tmp += buf;
+    clientInfo->setBuffer(tmp);
+
+    if (clientInfo->getBuffer().find('\n') == std::string::npos)
     {
         return ;
         // because if you receive and EOF without newline, we don't want
@@ -88,25 +86,11 @@ void    Server::unregisterClient(pollfdIter clientInfo)
     }
     else // handle data
     {
-        handleData(clientInfo);
+        handleData(*clientInfo);
     }
+}
 
-
-    // else
-    // {
-    //    //  (Testing server setup)
-    //     for (pollfdIter it = _clientsPoll.begin(); it != _clientsPoll.end(); it++)
-    //     {
-    //         if (it->fd == this->_svEndpoint) // if I send it to the listening socket it will SIGPIPE
-    //             continue ;
-    //         retCode = send((*it).fd, clientInfo.getBuffer().c_str(), retCode, 0);
-    //         if (retCode <= -1)
-    //             throw 'i'; //FailedtoSendMsg
-    //     }
-    // }
-} */
-
-
+/* 
 void    Server::handleClientData(Client &clientInfo)
 {
     // Make a buffer to store information from a client
@@ -131,3 +115,4 @@ void    Server::handleClientData(Client &clientInfo)
         handleData(clientInfo);
     }
 }
+ */
