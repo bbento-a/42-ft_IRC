@@ -21,6 +21,7 @@ class Client
 	public:
 
 	Client(int fd);
+	~Client();
 
 	int			getSocketFd(void) const;
 

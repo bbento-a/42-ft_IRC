@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 
 typedef std::vector<struct pollfd>::iterator pollfdIter;
@@ -35,10 +36,10 @@ class Server
 	// ── DATA ──────────────────────────────────────────────────────────────────
 	private:
 
-	std::string     _password;
-	int             _serverPort;
-	int             _svEndpoint;
-	unsigned int    _nbConnected;
+	std::string						_password;
+	int								_serverPort;
+	int								_svEndpoint;
+	unsigned int					_nbConnected;
 
 	std::vector<struct pollfd>      _clientsPoll;
 	std::map<int, Client>           _clients;
@@ -48,22 +49,22 @@ class Server
 	public:
 
 	// Lifecycle
-	void  parseArguments(char *port, char *password);
-	void  setup(char *port, char *password);
-	void  runtime(void);
+	void		parseArguments(char *port, char *password);
+	void		setup(char *port, char *password);
+	void		runtime(void);
 
 	// Client management
-	void  registerClient(void);
-	void  unregisterClient(pollfdIter clientInfo);
-	void  handleClientData(pollfdIter it);
-	void  handleData(Client &curClient);
+	void		registerClient(void);
+	void		unregisterClient(pollfdIter clientInfo);
+	void		handleClientData(pollfdIter it);
+	void		handleData(Client &curClient);
 
 	// Queries
-	bool     checkPassword(const std::string &pass) const;
-	bool     isNickInUse(const std::string &nick) const;
-	Client  *getClientByNick(const std::string &nick);
-	Channel *getChannel(const std::string &name);
-	Channel &getOrCreateChannel(const std::string &name);
+	bool		checkPassword(const std::string &pass) const;
+	bool		isNickInUse(const std::string &nick) const;
+	Client		*getClientByNick(const std::string &nick);
+	Channel		*getChannel(const std::string &name);
+	Channel		&getOrCreateChannel(const std::string &name);
 
 	// Channel management
 	void  removeFromAllChannels(int fd, const std::string &quitMsg);
@@ -97,8 +98,9 @@ class Server
 	class	FailedtoTurnListenSock : public std::exception
 	{ public: const char *what() const throw(); };
 
-	class	PollFailedtoRetrieveInfo : public std::exception
-	{ public: const char *what() const throw(); };
+	// class	PollFailedtoRetriveInfo : public std::exception
+	// { public: const char *what() const throw(); };
+	
 };
 
 // ── COMMAND HANDLERS ──────────────────────────────────────────────────────────

@@ -1,11 +1,20 @@
 #include "../inc/Server.hpp"
 #include <exception>
 #include <iostream>
+#include <signal.h>
+
+volatile    __sig_atomic_t g_stop = 0;
+
+static void signalHandler(int)
+{
+    g_stop = 1;
+}
 
 // ./ircserv <port> <password>
 
 int main (int argc, char **argv)
 {
+    signal(SIGINT , signalHandler);
     if (argc != 3)
     {
         std::cerr << "Number of arguments for usage incorrect" << '\n';

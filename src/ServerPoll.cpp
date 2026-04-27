@@ -24,9 +24,12 @@ void    Server::registerClient(void)
 
     fd = accept(this->_svEndpoint, reinterpret_cast<sockaddr *>(&sockSettings), &settingsLen);
     if (fd == -1)
-        throw 'g'; //FailedtoCreateClientSocket
+        return ;
     if (fcntl(fd, F_SETFL, O_NONBLOCK) <= -1)
-        throw 'h'; // FailedtoTurnSocketNonBlocking
+    {
+        close(fd);
+        return ;
+    }
     newClientPoll.fd = fd;
     newClientPoll.events = POLLIN;
 	newClientPoll.revents = 0;
@@ -89,30 +92,3 @@ void    Server::handleClientData(pollfdIter it)
         handleData(*clientInfo);
     }
 }
-
-/* 
-void    Server::handleClientData(Client &clientInfo)
-{
-    // Make a buffer to store information from a client
-    char buf[100];
-    int  retCode = -1;
-    retCode = recv(clientInfo.getSocketFd(), buf, sizeof(buf) -1, 0);
-    if (retCode == 0)
-    {
-        //unregister client
-        return ;
-    }
-
-    //  Store that information in a container
-    //  Send that info to "corresponded place" in sv (send to commands)
-
-    if (retCode <= -1)
-        throw ;//FailedtoReceiveMsg
-    else
-    {
-        buf[retCode] = '\0';
-        clientInfo.setBuffer(std::string(buf, retCode));
-        handleData(clientInfo);
-    }
-}
- */

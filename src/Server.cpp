@@ -3,11 +3,13 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-// #include <arpa/inet.h>
 #include <fcntl.h>
+#include <csignal>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+
+extern volatile sig_atomic_t g_stop;
 
 void    Server::parseArguments(char *port, char *password)
 {
@@ -82,17 +84,24 @@ void	Server::setup(char *port, char *password)
 	addToPoll.revents = 0;
 	this->_clientsPoll.push_back(addToPoll);
 	this->_nbConnected++;
+	//shutdownOrder = false;
 }
+
 
 void	Server::runtime()
 {
-	while (1)
+	while (!g_stop)
 	{
 		// using poll to identify if there is new data from the client connections
 		// and if there is poll will edit the given struct pollfd * variable, so when
 		// we iter it, we can act according to the new data that was found
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
-			throw PollFailedtoRetrieveInfo();
+		{
+			//std::cerr << "TIMEOUT: Poll failed to retrive information" << '\n';
+			if(errno == EINTR)
+				break;
+			// throw PollFailedtoRetriveInfo();
+		}
 
 		try
 		{
@@ -109,7 +118,7 @@ void	Server::runtime()
 				}
 				else if (cFd == this->_svEndpoint && (cEvent & POLLIN)) // accept new connections and add to the poll
 				{
-					std::cout << "Connected user"<< '\n';
+					std::cout << "Connected user" << '\n';
 					registerClient();
 				}
 				else if (cEvent & POLLIN) // new read input data
@@ -127,8 +136,6 @@ void	Server::runtime()
 		{
 			std::cerr << e.what() << '\n';
 		}
-		
-
 	}
 }
 

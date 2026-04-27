@@ -1,10 +1,16 @@
 #include "../inc/Client.hpp"
 #include <sys/socket.h>
+#include <unistd.h>
 
 Client::Client(int fd)
 	: socketFd(fd), buffer(""), nick(""), user(""), realname(""), host(""),
 	  passVerified(false), nickSet(false), userSet(false), _wantsQuit(false)
 {}
+
+Client::~Client()
+{
+	close(this->socketFd);
+}
 
 int	Client::getSocketFd(void) const
 {

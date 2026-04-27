@@ -68,11 +68,11 @@ void	Server::handleData(Client &curClient)
 			processedBuf.pop_back();
 		if (processedBuf.empty())
 			continue;
-
+/* 
 		for (size_t i = 0; i < processedBuf.size(); i++)
 			std::cout << processedBuf[i];
 		std::cout << '\n';
-
+ */
 		switch (parseCmd(processedBuf[0]))
 		{
 			case PASS:
