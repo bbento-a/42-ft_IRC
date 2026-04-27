@@ -67,6 +67,7 @@ class Server
 
 	// Channel management
 	void  removeFromAllChannels(int fd, const std::string &quitMsg);
+	void  pruneChannel(const std::string &name);
 
 	// ── EXCEPTIONS ────────────────────────────────────────────────────────────
 	class	InvalidPortNumber : public std::exception

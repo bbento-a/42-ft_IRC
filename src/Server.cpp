@@ -183,14 +183,29 @@ bool	Server::isNickInUse(const std::string &nick) const
 }
 
 // Broadcasts quitMsg to every channel the client is in, then removes them.
+// Channels that become empty are deleted.
 void	Server::removeFromAllChannels(int fd, const std::string &quitMsg)
 {
-	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	for (std::map<std::string, Channel>::iterator it = _channels.begin(); it != _channels.end(); )
 	{
 		if (it->second.hasMember(fd))
 		{
 			it->second.broadcast(quitMsg, fd);
 			it->second.removeMember(fd);
+			if (it->second.getMembers().empty())
+			{
+				_channels.erase(it++);
+				continue;
+			}
 		}
+		++it;
 	}
+}
+
+// Erases the channel from the server if it has no members left.
+void	Server::pruneChannel(const std::string &name)
+{
+	std::map<std::string, Channel>::iterator it = _channels.find(name);
+	if (it != _channels.end() && it->second.getMembers().empty())
+		_channels.erase(it);
 }

@@ -142,6 +142,7 @@ static void partOne(Client &caller, Server &server, const std::string &name, con
 	std::string partMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " PART " + name + " :" + reason + "\r\n";
 	chan->broadcast(partMsg, -1);
 	chan->removeMember(caller.getSocketFd());
+	server.pruneChannel(name);
 }
 
 void  partCmd(Client &caller, Server &server, std::vector<std::string> &args)
@@ -306,6 +307,7 @@ static void kickTarget(Channel *chan, Client &caller, Server &server,
 	std::string kickMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " KICK " + chanName + " " + targetNick + " :" + reason + "\r\n";
 	chan->broadcast(kickMsg, -1);
 	chan->removeMember(target->getSocketFd());
+	server.pruneChannel(chanName);
 }
 
 void  kickCmd(Client &caller, Server &server, std::vector<std::string> &args)
