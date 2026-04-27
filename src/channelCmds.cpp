@@ -2,16 +2,6 @@
 #include <sstream>
 #include <cstdlib>
 
-/*
-  Command: JOIN     | Parameters: <channel>{,<channel>} [<key>{,<key>}]
-  Command: PART     | Parameters: <channel>{,<channel>} [<reason>]
-  Command: TOPIC    | Parameters: <channel> [<topic>]
-  Command: INVITE   | Parameters: <nickname> <channel>
-  Command: KICK     | Parameters: <channel> <user> [<comment>]
-  Command: MODE     | Parameters: <target> [<modestring> [<mode arguments>...]]
-  Command: PRIVMSG  | Parameters: <target>{,<target>} <text to be sent>
-*/
-
 // ── SHARED UTILITIES ──────────────────────────────────────────────────────────
 
 // Splits a comma-separated string into 'out'.
@@ -354,9 +344,9 @@ void  kickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 
 // ── MODE ───────────────────────────────────────────────────────────────────────
 
+// No modestring argument: reply with the current channel modes (RPL_CHANNELMODEIS 324).
 static void modeQuery(Channel *chan, Client &caller, const std::string &target)
 {
-	// No modestring: reply with RPL_CHANNELMODEIS (324)
 	std::string modes = "+";
 	std::string modeArgs;
 	if (chan->isInviteOnly())  modes += "i";

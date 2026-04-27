@@ -2,11 +2,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// Initialises all fields to safe defaults; flags start false until each IRC command is received.
 Client::Client(int fd)
 	: socketFd(fd), buffer(""), nick(""), user(""), realname(""), host(""),
 	  passVerified(false), nickSet(false), userSet(false), _wantsQuit(false)
 {}
 
+// Closes the socket so the OS releases the file descriptor.
 Client::~Client()
 {
 	close(this->socketFd);
@@ -17,6 +19,7 @@ int	Client::getSocketFd(void) const
 	return socketFd;
 }
 
+// The buffer accumulates raw bytes from recv() until a full IRC line is ready.
 void	Client::setBuffer(const std::string &str)
 {
 	buffer = str;
@@ -27,6 +30,7 @@ std::string	Client::getBuffer(void) const
 	return buffer;
 }
 
+// Sets the nick and raises the flag used by isRegistered().
 void	Client::setNick(const std::string &n)
 {
 	nick = n;
@@ -38,6 +42,7 @@ std::string	Client::getNick(void) const
 	return nick;
 }
 
+// Sets the username and raises the flag used by isRegistered().
 void	Client::setUser(const std::string &u)
 {
 	user = u;
@@ -100,12 +105,7 @@ bool	Client::isRegistered(void) const
 	return (passVerified && nickSet && userSet);
 }
 
-// Sends a complete IRC message (caller is responsible for appending "\r\n").
-// Convenience wrapper so nothing outside Client needs to know about socketFd.
-// Enforces encapsulation: socketFd is private, so the only way to write to a
-// client is through this method. If logic needs to be added (e.g. checking if
-// the socket is still valid, logging outgoing messages, handling EAGAIN),
-// there is one single place to change it.
+// Sends a raw IRC message to the client's socket.
 void	Client::sendMsg(const std::string &msg) const
 {
 	send(socketFd, msg.c_str(), msg.size(), 0);

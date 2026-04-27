@@ -31,6 +31,26 @@ static int	parseCmd(const std::string &cmd)
 	return -1;
 }
 
+// Dispatches a parsed command to the appropriate handler.
+static void	dispatchCmd(Client &curClient, Server &server, std::vector<std::string> &args)
+{
+	switch (parseCmd(args[0]))
+	{
+		case PASS:   passCmd(curClient, server, args);    break;
+		case NICK:   nickCmd(curClient, server, args);    break;
+		case USER:   userCmd(curClient, server, args);    break;
+		case QUIT:   quitCmd(curClient, server, args);    break;
+		case JOIN:   joinCmd(curClient, server, args);    break;
+		case PART:   partCmd(curClient, server, args);    break;
+		case TOPIC:  topicCmd(curClient, server, args);   break;
+		case INVITE: inviteCmd(curClient, server, args);  break;
+		case KICK:   kickCmd(curClient, server, args);    break;
+		case MODE:   modeCmd(curClient, server, args);    break;
+		case PRIVMSG: privmsgCmd(curClient, server, args); break;
+		default:     break;
+	}
+}
+
 void	Server::handleData(Client &curClient)
 {
 	std::string	buffer = curClient.getBuffer();
@@ -41,13 +61,14 @@ void	Server::handleData(Client &curClient)
 
 	while (std::getline(bufStream, line))
 	{
-		// Parse data received from message
+		// Tokenise the line into command + arguments.
 		std::vector<std::string>	processedBuf;
 		std::stringstream			procStream(line);
 		std::string					curToken;
 
 		while (std::getline(procStream, curToken, ' '))
 		{
+			// A token starting with ':' consumes the rest of the line (trailing param).
 			if (!curToken.empty() && curToken[0] == ':')
 			{
 				std::string tmp;
@@ -57,10 +78,9 @@ void	Server::handleData(Client &curClient)
 			if (!curToken.empty())
 				processedBuf.push_back(curToken);
 		}
-
 		if (processedBuf.empty())
 			continue;
-		// Strip trailing \r from the last token
+		// Strip trailing \r\n from the last token.
 		std::string &last = processedBuf.back();
 		while (!last.empty() && (last[last.size() - 1] == '\n' || last[last.size() - 1] == '\r'))
 			last.erase(last.size() - 1);
@@ -68,48 +88,7 @@ void	Server::handleData(Client &curClient)
 			processedBuf.pop_back();
 		if (processedBuf.empty())
 			continue;
-/* 
-		for (size_t i = 0; i < processedBuf.size(); i++)
-			std::cout << processedBuf[i];
-		std::cout << '\n';
- */
-		switch (parseCmd(processedBuf[0]))
-		{
-			case PASS:
-				passCmd(curClient, *this, processedBuf);
-				break;
-			case NICK:
-				nickCmd(curClient, *this, processedBuf);
-				break;
-			case USER:
-				userCmd(curClient, *this, processedBuf);
-				break;
-			case QUIT:
-				quitCmd(curClient, *this, processedBuf);
-				break;
-			case JOIN:
-				joinCmd(curClient, *this, processedBuf);
-				break;
-			case PART:
-				partCmd(curClient, *this, processedBuf);
-				break;
-			case TOPIC:
-				topicCmd(curClient, *this, processedBuf);
-				break;
-			case INVITE:
-				inviteCmd(curClient, *this, processedBuf);
-				break;
-			case KICK:
-				kickCmd(curClient, *this, processedBuf);
-				break;
-			case MODE:
-				modeCmd(curClient, *this, processedBuf);
-				break;
-			case PRIVMSG:
-				privmsgCmd(curClient, *this, processedBuf);
-				break;
-			default:
-				break;
-		}
+
+		dispatchCmd(curClient, *this, processedBuf);
 	}
 }

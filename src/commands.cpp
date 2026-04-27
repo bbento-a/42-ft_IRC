@@ -1,40 +1,8 @@
 #include "../inc/Server.hpp"
 #include <sstream>
 #include <cstdlib>
-/* 
-my source for cmds: 
-https://modern.ircdocs.horse/#connection-messages
 
-
-     Command: PASS
-  Parameters: <password>
-  Errors:
-	ERR_NEEDMOREPARAMS (461)
-	ERR_ALREADYREGISTERED (462)
-	ERR_PASSWDMISMATCH (464) 
-
-     Command: NICK
-  Parameters: <nickname>
-  Errors:
-	ERR_NONICKNAMEGIVEN (431)
-	ERR_ERRONEUSNICKNAME (432)
-	ERR_NICKNAMEINUSE (433)
-	ERR_NICKCOLLISION (436)
-
-
-     Command: USER
-  Parameters: <username> 0 * <realname>
-  Errors:
-   ERR_NEEDMOREPARAMS (461)
-   ERR_ALREADYREGISTERED (462) 
-
-
-    Command: QUIT
-   Parameters: [<reason>]
-  Errors:
-   None
-*/
-
+// Sends the 4 welcome numerics (001-004) after a client fully registers.
 static void sendWelcome(Client &client)
 {
 	const std::string &nick = client.getNick();
@@ -47,16 +15,19 @@ static void sendWelcome(Client &client)
 
 void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	// Reject if the client is already registered.
 	if (caller.isRegistered())
 	{
 		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
 		return ;
 	}
+	// PASS requires exactly one argument.
 	if (args.size() < 2)
 	{
 		caller.sendMsg(":irc.server 461 " + caller.getNick() + " PASS :Not enough parameters\r\n");
 		return ;
 	}
+	// Validate the password against the server's configured password.
 	if (!server.checkPassword(args[1]))
 	{
 		caller.sendMsg(":irc.server 464 " + caller.getNick() + " :Password incorrect\r\n");
@@ -71,6 +42,7 @@ void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	char	first;
 	
+	// NICK requires a non-empty argument.
 	if (args.size() < 2 || args[1].empty())
 	{
 		caller.sendMsg(":irc.server 431 " + caller.getNick() + " :No nickname given\r\n");
@@ -78,41 +50,49 @@ void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	const std::string &newNick = args[1];
 
+	// First character must be a letter, underscore, or dash.
 	first = newNick[0];
 	if (!std::isalpha(first) && first != '_' && first != '-')
 	{
 		caller.sendMsg(":irc.server 432 " + caller.getNick() + " " + newNick + " :Erroneous nickname\r\n");
 		return ;
 	}
+	// Reject if another client already holds this nick.
 	if (server.isNickInUse(newNick) && newNick != caller.getNick())
 	{
 		caller.sendMsg(":irc.server 433 " + caller.getNick() + " " + newNick + " :Nickname is already in use\r\n");
 		return ;
 	}
 	caller.setNick(newNick);
+	// If PASS and USER were already done, the client is now fully registered.
 	if (caller.isRegistered())
 		sendWelcome(caller);
 }
+
 // ── USER ─────────────────────────────────────────────────────────────────────
 
 void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	(void)server;
+	// USER can only be sent once per connection.
 	if (caller.isUserSet())
 	{
 		caller.sendMsg(":irc.server 462 " + caller.getNick() + " :You may not reregister\r\n");
 		return ;
 	}
+	// USER requires: username, mode, unused, realname (5 tokens total).
 	if (args.size() < 5)
 	{
 		caller.sendMsg(":irc.server 461 " + caller.getNick() + " USER :Not enough parameters\r\n");
 		return ;
 	}
 	caller.setUser(args[1]);
+	// Strip the leading ':' from the realname field if present.
 	std::string rname = args[4];
 	if (!rname.empty() && rname[0] == ':')
 		rname.erase(0, 1);
 	caller.setRealname(rname);
+	// If PASS and NICK were already done, the client is now fully registered.
 	if (caller.isRegistered())
 		sendWelcome(caller);
 }
@@ -121,11 +101,14 @@ void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 
 void  quitCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
+	// Use the provided reason or fall back to a default message.
 	std::string reason = (args.size() >= 2) ? args[1] : "Client quit";
 	if (!reason.empty() && reason[0] == ':')
 		reason.erase(0, 1);
+	// Broadcast the QUIT message to every channel the client is in.
 	std::string quitMsg = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " QUIT :" + reason + "\r\n";
 	server.removeFromAllChannels(caller.getSocketFd(), quitMsg);
+	// Notify the client that the connection is closing, then flag for cleanup.
 	caller.sendMsg("ERROR :Closing connection\r\n");
 	caller.setWantsQuit(true);
 }

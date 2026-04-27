@@ -4,7 +4,7 @@
 
 
 # Name of the executable
-NAME		=	IRC
+NAME		=	ircserv
 
 # Compliler and flags to include on the exes
 CXX			=	c++
