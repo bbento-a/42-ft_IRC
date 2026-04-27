@@ -99,7 +99,7 @@ void	Server::runtime()
 		// we iter it, we can act according to the new data that was found
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 		{
-			if (errno == EINTR)
+			if (g_stop)
 				break;
 			throw PollFailedtoRetriveInfo();
 		}
