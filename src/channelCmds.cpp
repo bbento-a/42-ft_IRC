@@ -535,10 +535,30 @@ static void applyModes(Channel *chan, Client &caller, Server &server,
 	}
 }
 
+// Handles list-mode queries auto-sent by HexChat on join (b, e, I).
+// Returns true if the modestring was a list query and was handled.
+static bool handleListQuery(Channel *chan, Client &caller, const std::string &target, const std::string &modeStr)
+{
+	if (modeStr != "b" && modeStr != "e" && modeStr != "I")
+		return (false);
+	if (!chan->hasMember(caller.getSocketFd()))
+	{
+		caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + target + " :You're not on that channel\r\n");
+		return (true);
+	}
+	if (modeStr == "b")
+		caller.sendMsg(":irc.server 368 " + caller.getNick() + " " + target + " :End of channel ban list\r\n");
+	else if (modeStr == "e")
+		caller.sendMsg(":irc.server 349 " + caller.getNick() + " " + target + " :End of channel exception list\r\n");
+	else
+		caller.sendMsg(":irc.server 347 " + caller.getNick() + " " + target + " :End of channel invite list\r\n");
+	return (true);
+}
+
 void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	Channel	*chan;
-	
+
 	if (args.size() < 2)
 	{
 		caller.sendMsg(":irc.server 461 " + caller.getNick() + " MODE :Not enough parameters\r\n");
@@ -555,18 +575,8 @@ void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	if (args.size() == 2)  // no modestring: query current modes
 		return (modeQuery(chan, caller, target));
-	// Ban list query (e.g. HexChat auto-sends "MODE #chan b" on join)
-	// Any channel member may query it; reply with an empty list.
-	if (args[2] == "b" || args[2] == "+b")
-	{
-		if (!chan->hasMember(caller.getSocketFd()))
-		{
-			caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + target + " :You're not on that channel\r\n");
-			return ;
-		}
-		caller.sendMsg(":irc.server 368 " + caller.getNick() + " " + target + " :End of channel ban list\r\n");
+	if (handleListQuery(chan, caller, target, args[2]))
 		return ;
-	}
 	if (!checkChanOp(chan, caller, target))  // must be a member and an operator
 		return ;
 	// Collect the applied changes, then broadcast once
