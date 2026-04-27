@@ -7,7 +7,7 @@ static void sendWelcome(Client &client)
 	client.sendMsg(":irc.server 001 " + nick + " :Welcome to the IRC server " + nick + "!" + client.getUser() + "@" + client.getHost() + "\r\n");
 	client.sendMsg(":irc.server 002 " + nick + " :Your host is irc.server, running version 1.0\r\n");
 	client.sendMsg(":irc.server 003 " + nick + " :This server was created today\r\n");
-	client.sendMsg(":irc.server 004 " + nick + " irc.server 1.0 o itkol\r\n");
+	client.sendMsg(":irc.server 004 " + nick + " irc.server 1.0 itkol\r\n");
 }
 // ── PASS ─────────────────────────────────────────────────────────────────────
 

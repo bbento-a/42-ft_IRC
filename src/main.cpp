@@ -15,7 +15,7 @@ int main (int argc, char **argv)
     if (argc != 3)
     {
         std::cerr << "Number of arguments for usage incorrect" << '\n';
-        std::cout << "Try ./IRC <port> <password>" << '\n';
+        std::cout << "Try ./ircserv <port> <password>" << '\n';
         return (1);
     }
 

@@ -27,5 +27,5 @@ const char *Server::FailedtoBindServerSock::what() const throw()
 const char *Server::FailedtoTurnListenSock::what() const throw()
 { return ("Failed to turn the socket passive"); }
 
-// const char *Server::PollFailedtoRetriveInfo::what() const throw()
-// { return ("Failed Poll Retriving Info"); }
+const char *Server::PollFailedtoRetriveInfo::what() const throw()
+{ return ("Failed Poll Retriving Info"); }

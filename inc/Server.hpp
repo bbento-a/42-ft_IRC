@@ -59,6 +59,9 @@ class Server
 	// ── INTERFACE ─────────────────────────────────────────────────────────────
 	public:
 
+	Server();
+	~Server();
+
 	// Lifecycle
 	void		parseArguments(char *port, char *password);
 	void		setup(char *port, char *password);
@@ -109,8 +112,8 @@ class Server
 	class	FailedtoTurnListenSock : public std::exception
 	{ public: const char *what() const throw(); };
 
-	// class	PollFailedtoRetriveInfo : public std::exception
-	// { public: const char *what() const throw(); };
+	class	PollFailedtoRetriveInfo : public std::exception
+	{ public: const char *what() const throw(); };
 	
 };
 

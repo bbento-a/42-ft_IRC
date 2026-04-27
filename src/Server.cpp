@@ -2,6 +2,17 @@
 
 extern volatile sig_atomic_t g_stop;
 
+Server::Server()
+	: _password(""), _serverPort(0), _svEndpoint(-1), _nbConnected(0)
+{}
+
+// Closes the server's listening socket so the OS releases the file descriptor.
+Server::~Server()
+{
+	if (_svEndpoint != -1)
+		close(_svEndpoint);
+}
+
 void    Server::parseArguments(char *port, char *password)
 {
 	long parsePort = std::atol(port);
@@ -88,10 +99,9 @@ void	Server::runtime()
 		// we iter it, we can act according to the new data that was found
 		if (poll(&_clientsPoll[0], _clientsPoll.size(), -1) <= -1)
 		{
-			//std::cerr << "TIMEOUT: Poll failed to retrive information" << '\n';
-			if(errno == EINTR)
+			if (errno == EINTR)
 				break;
-			// throw PollFailedtoRetriveInfo();
+			throw PollFailedtoRetriveInfo();
 		}
 
 		try

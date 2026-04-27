@@ -64,8 +64,11 @@ void    Server::handleClientData(pollfdIter it)
 
     if (retCode <= -1)
         return ;
-    else if (retCode == 0) // if the program doesn't have any bytes from the client, we want to close the connection
+    else if (retCode == 0) // client closed the connection gracefully
+    {
         unregisterClient(it);
+        return ;
+    }
 
     std::string tmp = clientInfo->getBuffer();
     tmp += buf;
