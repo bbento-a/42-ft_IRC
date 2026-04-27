@@ -555,6 +555,18 @@ void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	if (args.size() == 2)  // no modestring: query current modes
 		return (modeQuery(chan, caller, target));
+	// Ban list query (e.g. HexChat auto-sends "MODE #chan b" on join)
+	// Any channel member may query it; reply with an empty list.
+	if (args[2] == "b" || args[2] == "+b")
+	{
+		if (!chan->hasMember(caller.getSocketFd()))
+		{
+			caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + target + " :You're not on that channel\r\n");
+			return ;
+		}
+		caller.sendMsg(":irc.server 368 " + caller.getNick() + " " + target + " :End of channel ban list\r\n");
+		return ;
+	}
 	if (!checkChanOp(chan, caller, target))  // must be a member and an operator
 		return ;
 	// Collect the applied changes, then broadcast once
@@ -563,7 +575,7 @@ void  modeCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	applyModes(chan, caller, server, args, appliedStr, appliedArgs);
 	if (!appliedStr.empty())
 	{
-		std::string notify = ":" + caller.getNick() + "!" + caller.getUser() + "@irc.server MODE " + target + " " + appliedStr + appliedArgs + "\r\n";
+		std::string notify = ":" + caller.getNick() + "!" + caller.getUser() + "@" + caller.getHost() + " MODE " + target + " " + appliedStr + appliedArgs + "\r\n";
 		chan->broadcast(notify, -1);
 	}
 }
