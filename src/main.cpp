@@ -1,7 +1,4 @@
 #include "../inc/Server.hpp"
-#include <exception>
-#include <iostream>
-#include <signal.h>
 
 volatile    __sig_atomic_t g_stop = 0;
 

@@ -1,13 +1,4 @@
 #include "../inc/Server.hpp"
-#include <cstdlib>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <csignal>
-#include <cerrno>
-#include <cstring>
-#include <iostream>
 
 extern volatile sig_atomic_t g_stop;
 

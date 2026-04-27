@@ -1,8 +1,5 @@
 #include "../inc/Server.hpp"
 
-#include <sstream>
-#include <iostream>
-
 // Maps a raw command string to the cmdsKeyword enum. Returns -1 if unknown.
 static int	parseCmd(const std::string &cmd)
 {

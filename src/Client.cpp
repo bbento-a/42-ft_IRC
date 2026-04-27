@@ -1,6 +1,4 @@
 #include "../inc/Client.hpp"
-#include <sys/socket.h>
-#include <unistd.h>
 
 // Initialises all fields to safe defaults; flags start false until each IRC command is received.
 Client::Client(int fd)

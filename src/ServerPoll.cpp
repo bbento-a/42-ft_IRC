@@ -1,12 +1,4 @@
 #include "../inc/Server.hpp"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
-#include <iostream>
 
 // Logic for having new wawawas:
 // Create Client instance

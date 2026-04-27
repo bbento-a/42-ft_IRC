@@ -1,6 +1,4 @@
 #include "../inc/Server.hpp"
-#include <sstream>
-#include <cstdlib>
 
 // Sends the 4 welcome numerics (001-004) after a client fully registers.
 static void sendWelcome(Client &client)

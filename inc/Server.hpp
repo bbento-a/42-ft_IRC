@@ -3,10 +3,21 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
+#include <arpa/inet.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
+#include <fcntl.h>
+#include <iostream>
 #include <map>
+#include <netinet/in.h>
 #include <poll.h>
+#include <sstream>
 #include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <vector>
 
 
