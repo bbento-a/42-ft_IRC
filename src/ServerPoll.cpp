@@ -27,7 +27,8 @@ void    Server::registerClient(void)
 	newClientPoll.revents = 0;
 
     Client newClient(fd);
-    newClient.setHost(inet_ntoa(sockSettings.sin_addr));
+    std::string ip = inet_ntoa(sockSettings.sin_addr);
+    newClient.setHost(ip == "127.0.0.1" ? "localhost" : ip);
     this->_clients.insert(std::make_pair(fd, newClient));
     this->_clientsPoll.push_back(newClientPoll);
 	this->_nbConnected++;

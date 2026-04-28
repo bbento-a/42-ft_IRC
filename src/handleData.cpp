@@ -70,7 +70,10 @@ void	Server::handleData(Client &curClient)
 			{
 				std::string tmp;
 				std::getline(procStream, tmp);
-				curToken += tmp;
+				// The space delimiter that getline consumed must be re-added so that
+				// ":hello world" doesn't become ":helloworld".
+				if (!tmp.empty())
+					curToken += " " + tmp;
 			}
 			if (!curToken.empty())
 				processedBuf.push_back(curToken);

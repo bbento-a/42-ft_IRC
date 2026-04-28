@@ -57,6 +57,12 @@ void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	const std::string &newNick = args[1];
 
+	// Nick must not exceed 9 characters (IRC RFC 1459).
+	if (newNick.size() > 9)
+	{
+		caller.sendMsg(":irc.server 432 " + caller.getNick() + " " + newNick + " :Erroneous nickname\r\n");
+		return ;
+	}
 	// First character must be a letter, underscore, or dash.
 	first = newNick[0];
 	if (!std::isalpha(first) && first != '_' && first != '-')

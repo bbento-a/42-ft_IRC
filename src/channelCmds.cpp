@@ -189,7 +189,7 @@ void  topicCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	if (args.size() < 2)
 	{
-		caller.sendMsg(":irc.server 461 " + caller.getNick() + " TOPIC :Not enough parameters\r\n");
+		caller.sendMsg(":irc.server 461 TOPIC :Not enough parameters\r\n");
 		return ;
 	}
 	const std::string &chanName = args[1];
@@ -265,7 +265,12 @@ void  inviteCmd(Client &caller, Server &server, std::vector<std::string> &args)
 	}
 	if (!chan->hasMember(caller.getSocketFd()))
 	{
-		caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + chanName + " :You're not on that channel\r\n");
+		// Non-members trying to invite to an invite-only channel get 482 (not 442)
+		// because the restriction is operator-level, not mere membership.
+		if (chan->isInviteOnly())
+			caller.sendMsg(":irc.server 482 " + caller.getNick() + " " + chanName + " :You're not channel operator\r\n");
+		else
+			caller.sendMsg(":irc.server 442 " + caller.getNick() + " " + chanName + " :You're not on that channel\r\n");
 		return ;
 	}
 	// Invite-only channels require the caller to be an operator
@@ -286,7 +291,12 @@ static void kickTarget(Channel *chan, Client &caller, Server &server,
 	Client	*target;
 
 	target = server.getClientByNick(targetNick);
-	if (!target || !chan->hasMember(target->getSocketFd()))
+	if (!target)
+	{
+		caller.sendMsg(":irc.server 401 " + caller.getNick() + " " + targetNick + " :No such nick\r\n");
+		return ;
+	}
+	if (!chan->hasMember(target->getSocketFd()))
 	{
 		caller.sendMsg(":irc.server 441 " + caller.getNick() + " " + targetNick + " " + chanName + " :They aren't on that channel\r\n");
 		return ;
