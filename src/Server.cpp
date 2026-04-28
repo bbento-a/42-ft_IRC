@@ -88,7 +88,6 @@ void	Server::setup(char *port, char *password)
 	addToPoll.revents = 0;
 	this->_clientsPoll.push_back(addToPoll);
 	this->_nbConnected++;
-	//shutdownOrder = false;
 }
 
 
