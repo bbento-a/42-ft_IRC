@@ -42,6 +42,10 @@ void    Server::unregisterClient(pollfdIter clientInfo)
 {
     //erase client from individual channels
 	std::cout << "Disconnected user"<< '\n';
+    Client &client = this->_clients.at(clientInfo->fd);
+    std::string quitMsg = ":" + client.getNick() + "!" + client.getUser() + "@" + client.getHost() + " QUIT :Connection closed\r\n";
+    removeFromAllChannels(clientInfo->fd, quitMsg);
+    client.sendMsg("ERROR :Closing Link: " + client.getNick() + " (Quit: Connection closed by client)\r\n");
     close(clientInfo->fd);
     this->_clients.erase(clientInfo->fd);
     this->_clientsPoll.erase(clientInfo);
