@@ -6,9 +6,11 @@ Server::Server()
 	: _password(""), _serverPort(0), _svEndpoint(-1), _nbConnected(0)
 {}
 
-// Closes the server's listening socket so the OS releases the file descriptor.
+// Closes all client sockets and the listening socket on shutdown.
 Server::~Server()
 {
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+		close(it->first);
 	if (_svEndpoint != -1)
 		close(_svEndpoint);
 }

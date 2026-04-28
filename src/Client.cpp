@@ -9,7 +9,6 @@ Client::Client(int fd)
 // Closes the socket so the OS releases the file descriptor.
 Client::~Client()
 {
-	close(this->socketFd);
 }
 
 int	Client::getSocketFd(void) const

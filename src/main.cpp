@@ -12,6 +12,7 @@ static void signalHandler(int)
 int main (int argc, char **argv)
 {
     signal(SIGINT , signalHandler);
+    signal(SIGPIPE, SIG_IGN);
     if (argc != 3)
     {
         std::cerr << "Number of arguments for usage incorrect" << '\n';

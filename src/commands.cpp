@@ -32,6 +32,9 @@ void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
 		return ;
 	}
 	caller.setPassVerified(true);
+	// If NICK and USER were already received before PASS, complete registration now.
+	if (caller.isRegistered())
+		sendWelcome(caller);
 }
 
 // ── NICK ─────────────────────────────────────────────────────────────────────
@@ -39,7 +42,13 @@ void  passCmd(Client &caller, Server &server, std::vector<std::string> &args)
 void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	char	first;
-	
+
+	// PASS must be verified before NICK can be accepted.
+	if (!caller.isPassVerified())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :Send PASS first\r\n");
+		return ;
+	}
 	// NICK requires a non-empty argument.
 	if (args.size() < 2 || args[1].empty())
 	{
@@ -72,6 +81,12 @@ void  nickCmd(Client &caller, Server &server, std::vector<std::string> &args)
 void  userCmd(Client &caller, Server &server, std::vector<std::string> &args)
 {
 	(void)server;
+	// PASS must be verified before USER can be accepted.
+	if (!caller.isPassVerified())
+	{
+		caller.sendMsg(":irc.server 451 " + caller.getNick() + " :Send PASS first\r\n");
+		return ;
+	}
 	// USER can only be sent once per connection.
 	if (caller.isUserSet())
 	{
